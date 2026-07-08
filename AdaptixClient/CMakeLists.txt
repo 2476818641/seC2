@@ -42,6 +42,10 @@ find_package(Qt6
         LinguistTools
 )
 
+if(WIN32)
+    find_package(Qt6 REQUIRED COMPONENTS EntryPoint)
+endif()
+
 include_directories(
         Headers
         Libs
@@ -292,6 +296,10 @@ target_link_libraries( AdaptixClient
 )
 
 if(WIN32)
+    # Build as a GUI (WINDOWS subsystem) app so no black console window appears.
+    set_target_properties( AdaptixClient PROPERTIES WIN32_EXECUTABLE TRUE )
+    target_link_libraries( AdaptixClient PRIVATE Qt6::EntryPoint )
+
     target_link_libraries( AdaptixClient
             PRIVATE
             wsock32
@@ -304,8 +312,10 @@ if(WIN32)
             userenv
             dwmapi
     )
-    target_link_options( AdaptixClient PRIVATE -static-libgcc -static-libstdc++ )
-    target_link_libraries( AdaptixClient PRIVATE -Wl,-Bstatic -lwinpthread -Wl,-Bdynamic )
+    if(MINGW)
+        target_link_options( AdaptixClient PRIVATE -static-libgcc -static-libstdc++ )
+        target_link_libraries( AdaptixClient PRIVATE -Wl,-Bstatic -lwinpthread -Wl,-Bdynamic )
+    endif()
 elseif(UNIX)
     target_link_libraries( AdaptixClient
             PRIVATE

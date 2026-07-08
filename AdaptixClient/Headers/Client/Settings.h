@@ -20,6 +20,7 @@ public:
     MainAdaptix*    getMainAdaptix();
     DialogSettings* getDialogSettings();
     void SetDefault();
+    static QString DetectSystemLanguage();
     void LoadFromDB();
     void SaveToDB() const;
 };

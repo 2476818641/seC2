@@ -102,6 +102,11 @@ jobs:
   # ====================== Server (Linux) ======================
   build-server:
     runs-on: ubuntu-latest
+    env:
+      # Go version and GOEXPERIMENT must match your server exactly to avoid
+      # "plugin was built with a different version" errors.
+      EXPECTED_GO_VERSION: '1.25.4'
+      GOEXPERIMENT: 'jsonv2,greenteagc'
     steps:
       - uses: actions/checkout@v4
 
@@ -112,22 +117,42 @@ jobs:
             AdaptixServer/go.sum
             AdaptixServer/go.work.sum
 
+      - name: Install build tools (mingw-w64 for agent cross-compilation)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential mingw-w64
+          echo "  mingw-w64 (64-bit): $(x86_64-w64-mingw32-g++ --version | head -n1)"
+          echo "  mingw-w64 (32-bit): $(i686-w64-mingw32-g++ --version | head -n1)"
+
+      - name: Verify Go version
+        run: |
+          INSTALLED=$(go version | awk '{print $3}' | sed 's/^go//')
+          echo "  Installed Go version : $INSTALLED"
+          echo "  Expected  Go version : $EXPECTED_GO_VERSION"
+          echo "  GOEXPERIMENT         : $GOEXPERIMENT"
+          echo "### Go version: \`$INSTALLED\` (GOEXPERIMENT=\`$GOEXPERIMENT\`)" >> "$GITHUB_STEP_SUMMARY"
+          if [ "$INSTALLED" != "$EXPECTED_GO_VERSION" ]; then
+            echo "::error::Go version mismatch: installed $INSTALLED, expected $EXPECTED_GO_VERSION. Server and plugins would be incompatible."
+            exit 1
+          fi
+
       - name: Build extenders (Go plugins)
         working-directory: AdaptixServer
         run: |
+          set -e
           for dir in extenders/*/; do
             name=$(basename "$dir")
             cfg="$dir/config.yaml"
             sofile=$(grep 'extender_file' "$cfg" 2>/dev/null | sed 's/.*"\(.*\)".*/\1/' || echo "plugin.so")
-            echo "  Building extender: $name -> $sofile"
+            echo "  Building extender: $name -> $sofile (GOEXPERIMENT=$GOEXPERIMENT)"
             mkdir -p "$dir/dist"
-            (cd "$dir" && CGO_ENABLED=1 go build -buildmode=plugin -ldflags="-s -w" -o "dist/$sofile" ./*.go 2>&1) || echo "  Warning: $name build failed"
+            (cd "$dir" && GOEXPERIMENT="$GOEXPERIMENT" CGO_ENABLED=1 go build -buildmode=plugin -ldflags="-s -w" -o "dist/$sofile" ./*.go)
           done
 
       - name: Build server
         working-directory: AdaptixServer
         run: |
-          GOEXPERIMENT=jsonv2,greenteagc go build -buildvcs=false -ldflags="-s -w" -o adaptixserver .
+          GOEXPERIMENT="$GOEXPERIMENT" go build -buildvcs=false -ldflags="-s -w" -o adaptixserver .
 
       - name: Package distribution
         run: |
@@ -177,6 +202,15 @@ jobs:
             - `AdaptixClient-Windows.zip` — Windows 客户端（解压即用）
             - `AdaptixClient-Linux.tar.gz` — Linux 客户端
             - `AdaptixServer-Linux.tar.gz` — Linux 服务端（含 extenders）
+
+            ### 服务端运行要求（重要）
+            - **Go 1.25.4**：server 与 extenders 插件用 `GOEXPERIMENT=jsonv2,greenteagc` 编译，
+              若自行重编务必使用相同 Go 版本与 GOEXPERIMENT，否则会报
+              `plugin was built with a different version` 错误。
+            - **生成 Windows agent 需要 mingw-w64**：
+              `sudo apt install -y mingw-w64`
+              （提供 `x86_64-w64-mingw32-g++` 与 `i686-w64-mingw32-g++`）
+            - `adaptixserver`、`profile.yaml`、`404page.html` 必须位于同一目录。
           files: |
             AdaptixClient-Windows/AdaptixClient-Windows.zip
             AdaptixClient-Linux/AdaptixClient-Linux.tar.gz

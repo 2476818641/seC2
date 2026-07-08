@@ -2,6 +2,7 @@
 #include <Client/Settings.h>
 #include <Client/Storage.h>
 #include <MainAdaptix.h>
+#include <QLocale>
 
 Settings::Settings(MainAdaptix* m)
 {
@@ -54,7 +55,15 @@ void Settings::SetDefault()
         data.TasksTableColumns[i] = true;
 
     this->data.TabBlinkEnabled = true;
-    this->data.Language = "en_US";
+    this->data.Language = DetectSystemLanguage();
+}
+
+QString Settings::DetectSystemLanguage()
+{
+    const QString sys = QLocale::system().name();
+    if (sys.startsWith("zh"))
+        return "zh_CN";
+    return "en_US";
 }
 
 void Settings::LoadFromDB()
