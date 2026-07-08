@@ -3,6 +3,7 @@
 
 #include <QLoggingCategory>
 #include <QSslSocket>
+#include <oclero/qlementine/resources/ResourceInitialization.hpp>
 
 MainAdaptix* GlobalClient = nullptr;
 
@@ -37,6 +38,8 @@ int main(int argc, char *argv[])
     );
 
     QApplication a(argc, argv);
+
+    oclero::qlementine::resources::initializeResources();
 
     // Force early SSL backend initialization
     QSslSocket::supportsSsl();
