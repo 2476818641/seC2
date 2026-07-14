@@ -1,0 +1,37 @@
+cmake-build-debug/
+cmake-build-release/
+objects_dns/
+objects_http/
+objects_smb/
+objects_tcp/
+.idea/
+.qt/
+*.so
+dist/
+AdaptixServer/server-dist/
+AdaptixClient/CMakeFiles/
+AdaptixClient/AdaptixClient_autogen/
+AdaptixClient/CMakeCache.txt
+AdaptixClient/*.log
+AdaptixClient/cmake_*
+AdaptixClient/Makefile
+AdaptixServer/build_error.log
+
+# CMake generated files in kddockwidgets
+AdaptixClient/Libs/kddockwidgets/CMakeFiles/
+AdaptixClient/Libs/kddockwidgets/Makefile
+AdaptixClient/Libs/kddockwidgets/cmake_install.cmake
+AdaptixClient/Libs/kddockwidgets/*_autogen/
+AdaptixClient/Libs/kddockwidgets/*.a
+AdaptixClient/Libs/kddockwidgets/*_export.h
+!AdaptixClient/Libs/kddockwidgets/docks_export.h
+!AdaptixClient/Libs/kddockwidgets/fwd_headers/kddockwidgets/docks_export.h
+
+# VSCode
+.vscode/
+#JB
+.cache/
+
+# macOS
+.DS_Store
+**/.DS_Store

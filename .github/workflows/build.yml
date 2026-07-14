@@ -1,0 +1,232 @@
+name: Build and Release
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  # ====================== Client (Windows MSVC) ======================
+  build-client-win:
+    runs-on: windows-latest
+    env:
+      # Cache vcpkg build artifacts on the GitHub Actions (Azure) cache backend.
+      # First run compiles OpenSSL once; later runs fetch the prebuilt binary fast.
+      VCPKG_BINARY_SOURCES: 'clear;x-gha,readwrite'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Enable vcpkg GitHub Actions binary cache
+        uses: actions/github-script@v7
+        with:
+          script: |
+            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
+            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.8.*'
+          arch: 'win64_msvc2022_64'
+          modules: 'qtwebsockets'
+
+      - name: Install OpenSSL via vcpkg
+        run: |
+          vcpkg install openssl:x64-windows
+          "OPENSSL_ROOT_DIR=$env:VCPKG_INSTALLATION_ROOT\installed\x64-windows" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: Configure
+        run: |
+          cmake -S AdaptixClient -B build -G Ninja -DCMAKE_BUILD_TYPE=Release `-DCMAKE_PREFIX_PATH="$env:QT_ROOT_DIR" `-DCMAKE_CXX_FLAGS="/DNOMINMAX"
+
+      - name: Build
+        run: cmake --build build --config Release
+
+      - name: Deploy with windeployqt
+        run: |
+          windeployqt build/AdaptixClient.exe --no-translations --no-compiler-runtime --no-opengl-sw
+          Remove-Item -Recurse -Force build\qmltooling -ErrorAction SilentlyContinue
+          Remove-Item -Force build\D3Dcompiler_47.dll -ErrorAction SilentlyContinue
+          Remove-Item -Force build\opengl32sw.dll -ErrorAction SilentlyContinue
+          Get-ChildItem build\sqldrivers -Filter *.dll | Where-Object { $_.Name -notmatch 'qsqlite|qsqlodbc' } | Remove-Item -Force
+          Get-ChildItem build\imageformats -Filter *.dll | Where-Object { $_.Name -notmatch 'qgif|qico|qjpeg|qsvg' } | Remove-Item -Force
+
+      - name: Package (zip)
+        shell: pwsh
+        run: |
+          Compress-Archive -Path build\AdaptixClient.exe,build\*.dll,build\platforms,build\styles,build\sqldrivers,build\imageformats,build\iconengines,build\networkinformation,build\tls,build\generic -DestinationPath AdaptixClient-Windows.zip
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AdaptixClient-Windows
+          path: AdaptixClient-Windows.zip
+
+  # ====================== Client (Linux) ======================
+  build-client-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential ninja-build libssl-dev libgl1-mesa-dev libxkbcommon-dev libxcb-*-dev
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.8.*'
+          arch: 'linux_gcc_64'
+          modules: 'qtwebsockets'
+
+      - name: Configure
+        run: |
+          cmake -S AdaptixClient -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$QT_ROOT_DIR"
+
+      - name: Build
+        run: cmake --build build --config Release
+
+      - name: Package (tar.gz)
+        run: |
+          mkdir -p dist-client
+          cp build/AdaptixClient dist-client/
+          cd dist-client
+          tar czf ../AdaptixClient-Linux.tar.gz .
+          cd ..
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AdaptixClient-Linux
+          path: AdaptixClient-Linux.tar.gz
+
+  # ====================== Server (Linux) ======================
+  build-server:
+    runs-on: ubuntu-latest
+    env:
+      # Go version and GOEXPERIMENT must match your server exactly to avoid
+      # "plugin was built with a different version" errors.
+      EXPECTED_GO_VERSION: '1.25.4'
+      GOEXPERIMENT: 'jsonv2,greenteagc'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.25.4'
+          cache-dependency-path: |
+            AdaptixServer/go.sum
+            AdaptixServer/go.work.sum
+
+      - name: Install build tools (mingw-w64 for agent cross-compilation)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential mingw-w64
+          echo "  mingw-w64 (64-bit): $(x86_64-w64-mingw32-g++ --version | head -n1)"
+          echo "  mingw-w64 (32-bit): $(i686-w64-mingw32-g++ --version | head -n1)"
+
+      - name: Verify Go version
+        run: |
+          INSTALLED=$(go version | awk '{print $3}' | sed 's/^go//')
+          echo "  Installed Go version : $INSTALLED"
+          echo "  Expected  Go version : $EXPECTED_GO_VERSION"
+          echo "  GOEXPERIMENT         : $GOEXPERIMENT"
+          echo "### Go version: \`$INSTALLED\` (GOEXPERIMENT=\`$GOEXPERIMENT\`)" >> "$GITHUB_STEP_SUMMARY"
+          if [ "$INSTALLED" != "$EXPECTED_GO_VERSION" ]; then
+            echo "::error::Go version mismatch: installed $INSTALLED, expected $EXPECTED_GO_VERSION. Server and plugins would be incompatible."
+            exit 1
+          fi
+
+      - name: Build extenders (Go plugins)
+        working-directory: AdaptixServer
+        run: |
+          set -e
+          for dir in extenders/*/; do
+            name=$(basename "$dir")
+            cfg="$dir/config.yaml"
+            sofile=$(grep 'extender_file' "$cfg" 2>/dev/null | sed 's/.*"\(.*\)".*/\1/' || echo "plugin.so")
+            echo "  Building extender: $name -> $sofile (GOEXPERIMENT=$GOEXPERIMENT)"
+            mkdir -p "$dir/dist"
+            (cd "$dir" && GOEXPERIMENT="$GOEXPERIMENT" CGO_ENABLED=1 go build -buildmode=plugin -ldflags="-s -w" -o "dist/$sofile" ./*.go)
+          done
+
+      - name: Build server
+        working-directory: AdaptixServer
+        run: |
+          GOEXPERIMENT="$GOEXPERIMENT" go build -buildvcs=false -ldflags="-s -w" -o adaptixserver .
+
+      - name: Package distribution
+        run: |
+          mkdir -p dist-server
+          cp AdaptixServer/adaptixserver dist-server/
+          cp AdaptixServer/profile.yaml dist-server/
+          cp AdaptixServer/404page.html dist-server/
+          cp AdaptixServer/ssl_gen.sh dist-server/
+          for dir in AdaptixServer/extenders/*/; do
+            name=$(basename "$dir")
+            mkdir -p "dist-server/extenders/$name"
+            cp "$dir/config.yaml" "dist-server/extenders/$name/" 2>/dev/null || true
+            cp "$dir/ax_config.axs" "dist-server/extenders/$name/" 2>/dev/null || true
+            cp "$dir/dist/"*.so "dist-server/extenders/$name/" 2>/dev/null || true
+          done
+          cd dist-server
+          tar czf ../AdaptixServer-Linux.tar.gz .
+          cd ..
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AdaptixServer-Linux
+          path: AdaptixServer-Linux.tar.gz
+
+  # ====================== Create Release ======================
+  release:
+    needs: [build-client-win, build-client-linux, build-server]
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request'
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.2-${{ github.run_number }}
+          name: AdaptixC2 v1.2 (Build #${{ github.run_number }})
+          body: |
+            ## AdaptixC2 v1.2 — 汉化版
+
+            - **客户端**: 支持中/英文界面切换，系统语言自动检测
+            - **服务端**: 原版 Linux 服务端
+
+            ### 文件说明
+            - `AdaptixClient-Windows.zip` — Windows 客户端（解压即用）
+            - `AdaptixClient-Linux.tar.gz` — Linux 客户端
+            - `AdaptixServer-Linux.tar.gz` — Linux 服务端（含 extenders）
+
+            ### 服务端运行要求（重要）
+            - **Go 1.25.4**：server 与 extenders 插件用 `GOEXPERIMENT=jsonv2,greenteagc` 编译，
+              若自行重编务必使用相同 Go 版本与 GOEXPERIMENT，否则会报
+              `plugin was built with a different version` 错误。
+            - **生成 Windows agent 需要 mingw-w64**：
+              `sudo apt install -y mingw-w64`
+              （提供 `x86_64-w64-mingw32-g++` 与 `i686-w64-mingw32-g++`）
+            - `adaptixserver`、`profile.yaml`、`404page.html` 必须位于同一目录。
+          files: |
+            AdaptixClient-Windows/AdaptixClient-Windows.zip
+            AdaptixClient-Linux/AdaptixClient-Linux.tar.gz
+            AdaptixServer-Linux/AdaptixServer-Linux.tar.gz
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
