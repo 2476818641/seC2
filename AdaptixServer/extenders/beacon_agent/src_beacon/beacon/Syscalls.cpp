@@ -78,24 +78,24 @@ BOOL InitSyscalls()
 	if (!hNtdll)
 		return FALSE;
 
-	ResolveSyscallEntry(&g_Syscalls->NtAllocateVirtualMemory,  hNtdll, SYSCALL_HASH_NTALLOCATEVIRTUALMEMORY);
-	ResolveSyscallEntry(&g_Syscalls->NtWriteVirtualMemory,      hNtdll, SYSCALL_HASH_NTWRITEVIRTUALMEMORY);
-	ResolveSyscallEntry(&g_Syscalls->NtProtectVirtualMemory,    hNtdll, SYSCALL_HASH_NTPROTECTVIRTUALMEMORY);
-	ResolveSyscallEntry(&g_Syscalls->NtCreateThreadEx,          hNtdll, SYSCALL_HASH_NTCREATETHREADEX);
-	ResolveSyscallEntry(&g_Syscalls->NtOpenProcess,             hNtdll, HASH_FUNC_NTOPENPROCESS);
-	ResolveSyscallEntry(&g_Syscalls->NtOpenProcessToken,        hNtdll, HASH_FUNC_NTOPENPROCESSTOKEN);
-	ResolveSyscallEntry(&g_Syscalls->NtClose,                   hNtdll, HASH_FUNC_NTCLOSE);
-	ResolveSyscallEntry(&g_Syscalls->NtQuerySystemInformation,  hNtdll, HASH_FUNC_NTQUERYSYSTEMINFORMATION);
-	ResolveSyscallEntry(&g_Syscalls->NtQueryInformationProcess, hNtdll, HASH_FUNC_NTQUERYINFORMATIONPROCESS);
-	ResolveSyscallEntry(&g_Syscalls->NtTerminateProcess,        hNtdll, HASH_FUNC_NTTERMINATEPROCESS);
-	ResolveSyscallEntry(&g_Syscalls->NtTerminateThread,         hNtdll, HASH_FUNC_NTTERMINATETHREAD);
-	ResolveSyscallEntry(&g_Syscalls->NtFreeVirtualMemory,       hNtdll, HASH_FUNC_NTFREEVIRTUALMEMORY);
-	ResolveSyscallEntry(&g_Syscalls->NtCreateSection,           hNtdll, SYSCALL_HASH_NTCREATESECTION);
-	ResolveSyscallEntry(&g_Syscalls->NtMapViewOfSection,        hNtdll, SYSCALL_HASH_NTMAPVIEWOFSECTION);
-	ResolveSyscallEntry(&g_Syscalls->NtUnmapViewOfSection,      hNtdll, SYSCALL_HASH_NTUNMAPVIEWOFSECTION);
-	ResolveSyscallEntry(&g_Syscalls->NtWaitForSingleObject,     hNtdll, SYSCALL_HASH_NTWAITFORSINGLEOBJECT);
-	ResolveSyscallEntry(&g_Syscalls->NtDelayExecution,          hNtdll, SYSCALL_HASH_NTDELAYEXECUTION);
-	ResolveSyscallEntry(&g_Syscalls->NtQueryVirtualMemory,      hNtdll, SYSCALL_HASH_NTQUERYVIRTUALMEMORY);
+	ResolveSyscallEntry(&g_Syscalls->ntAllocateVirtualMemory,  hNtdll, SYSCALL_HASH_NTALLOCATEVIRTUALMEMORY);
+	ResolveSyscallEntry(&g_Syscalls->ntWriteVirtualMemory,      hNtdll, SYSCALL_HASH_NTWRITEVIRTUALMEMORY);
+	ResolveSyscallEntry(&g_Syscalls->ntProtectVirtualMemory,    hNtdll, SYSCALL_HASH_NTPROTECTVIRTUALMEMORY);
+	ResolveSyscallEntry(&g_Syscalls->ntCreateThreadEx,          hNtdll, SYSCALL_HASH_NTCREATETHREADEX);
+	ResolveSyscallEntry(&g_Syscalls->ntOpenProcess,             hNtdll, HASH_FUNC_NTOPENPROCESS);
+	ResolveSyscallEntry(&g_Syscalls->ntOpenProcessToken,        hNtdll, HASH_FUNC_NTOPENPROCESSTOKEN);
+	ResolveSyscallEntry(&g_Syscalls->ntClose,                   hNtdll, HASH_FUNC_NTCLOSE);
+	ResolveSyscallEntry(&g_Syscalls->ntQuerySystemInformation,  hNtdll, HASH_FUNC_NTQUERYSYSTEMINFORMATION);
+	ResolveSyscallEntry(&g_Syscalls->ntQueryInformationProcess, hNtdll, HASH_FUNC_NTQUERYINFORMATIONPROCESS);
+	ResolveSyscallEntry(&g_Syscalls->ntTerminateProcess,        hNtdll, HASH_FUNC_NTTERMINATEPROCESS);
+	ResolveSyscallEntry(&g_Syscalls->ntTerminateThread,         hNtdll, HASH_FUNC_NTTERMINATETHREAD);
+	ResolveSyscallEntry(&g_Syscalls->ntFreeVirtualMemory,       hNtdll, HASH_FUNC_NTFREEVIRTUALMEMORY);
+	ResolveSyscallEntry(&g_Syscalls->ntCreateSection,           hNtdll, SYSCALL_HASH_NTCREATESECTION);
+	ResolveSyscallEntry(&g_Syscalls->ntMapViewOfSection,        hNtdll, SYSCALL_HASH_NTMAPVIEWOFSECTION);
+	ResolveSyscallEntry(&g_Syscalls->ntUnmapViewOfSection,      hNtdll, SYSCALL_HASH_NTUNMAPVIEWOFSECTION);
+	ResolveSyscallEntry(&g_Syscalls->ntWaitForSingleObject,     hNtdll, SYSCALL_HASH_NTWAITFORSINGLEOBJECT);
+	ResolveSyscallEntry(&g_Syscalls->ntDelayExecution,          hNtdll, SYSCALL_HASH_NTDELAYEXECUTION);
+	ResolveSyscallEntry(&g_Syscalls->ntQueryVirtualMemory,      hNtdll, SYSCALL_HASH_NTQUERYVIRTUALMEMORY);
 
 	return TRUE;
 }

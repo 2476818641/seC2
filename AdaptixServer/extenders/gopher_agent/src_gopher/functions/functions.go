@@ -17,6 +17,8 @@ import (
 	"github.com/kbinani/screenshot"
 )
 
+const lengthMask uint32 = 0x7A3F9C5E
+
 /// FS
 
 func CopyFile(src, dst string, info fs.FileInfo) error {
@@ -377,7 +379,7 @@ func RecvMsg(conn net.Conn) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	msgLen := binary.BigEndian.Uint32(bufLen)
+	msgLen := binary.BigEndian.Uint32(bufLen) ^ lengthMask
 
 	return ConnRead(conn, int(msgLen))
 }
@@ -388,7 +390,7 @@ func SendMsg(conn net.Conn, data []byte) error {
 	}
 
 	msgLen := make([]byte, 4)
-	binary.BigEndian.PutUint32(msgLen, uint32(len(data)))
+	binary.BigEndian.PutUint32(msgLen, uint32(len(data))^lengthMask)
 	message := append(msgLen, data...)
 	_, err := conn.Write(message)
 	return err

@@ -7,6 +7,7 @@ import (
 	"encoding/binary"
 	"gopher/functions"
 	"gopher/utils"
+	"math/rand"
 	"net"
 	"os"
 	"os/user"
@@ -130,7 +131,7 @@ func main() {
 	addrIndex := 0
 	for i := 0; i < profile.ConnCount && ACTIVE; i++ {
 		if i > 0 {
-			time.Sleep(time.Duration(profile.ConnTimeout) * time.Second)
+			time.Sleep(jitterDelay(profile.ConnTimeout * 1000))
 			addrIndex++
 			if addrIndex >= len(profile.Addresses) {
 				addrIndex = 0
@@ -162,8 +163,12 @@ func main() {
 			config := &tls.Config{
 				Certificates:       []tls.Certificate{cert},
 				RootCAs:            caCertPool,
-				InsecureSkipVerify: true,
 			}
+			config.MinVersion = tls.VersionTLS12
+			config.MaxVersion = tls.VersionTLS13
+			config.CurvePreferences = []tls.CurveID{tls.X25519, tls.CurveP256, tls.CurveP384}
+			host, _, _ := net.SplitHostPort(profile.Addresses[addrIndex])
+			config.ServerName = host
 			conn, err = tls.Dial("tcp", profile.Addresses[addrIndex], config)
 
 		} else {
@@ -229,4 +234,12 @@ func SignalWakeup() {
 	case WakeupChan <- struct{}{}:
 	default:
 	}
+}
+
+func jitterDelay(baseMs int) time.Duration {
+	if baseMs <= 0 { return 0 }
+	jitter := baseMs / 3
+	delay := baseMs + rand.Intn(jitter*2) - jitter
+	if delay < 100 { delay = 100 }
+	return time.Duration(delay) * time.Millisecond
 }
