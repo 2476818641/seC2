@@ -11,6 +11,7 @@ import (
 	"math/rand/v2"
 	"net"
 	"os"
+	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
@@ -613,6 +614,12 @@ func (p *PluginAgent) BuildPayload(profile adaptix.BuildProfile, agentProfiles [
 	}
 
 	agentProfileSize := len(agentProfile) / 4
+
+	configPath := filepath.Join(currentDir, ObjectDir, "config.cpp")
+	if _, err := os.Stat(configPath); os.IsNotExist(err) {
+		return nil, "", fmt.Errorf("config template not found at %s", configPath)
+	}
+
 	if generateConfig.Format == "Service Exe" {
 		cmdConfig = fmt.Sprintf("%s %s %s/config.cpp -DBUILD_SVC -DSERVICE_NAME='\"%s\"' -DPROFILE='\"%s\"' -DPROFILE_SIZE=%d -o %s/config.o", Compiler, cFlags, ObjectDir, svcName, string(agentProfile), agentProfileSize, tempDir)
 	} else {

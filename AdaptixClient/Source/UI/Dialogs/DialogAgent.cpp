@@ -23,7 +23,7 @@ void DialogAgent::createUI()
     listenerDisplayEdit->setReadOnly(true);
     listenerDisplayEdit->setPlaceholderText(tr("Click to select listeners..."));
 
-    listenerSelectBtn = new QPushButton("...", this);
+    listenerSelectBtn = new QPushButton(tr("..."), this);
     listenerSelectBtn->setToolTip(tr("Select listeners"));
 
     listenerListWidget = new QListWidget();
@@ -33,9 +33,9 @@ void DialogAgent::createUI()
     listenerListWidget->setMinimumWidth(250);
     listenerListWidget->setMinimumHeight(150);
 
-    btnMoveUp = new QPushButton("↑");
+    btnMoveUp = new QPushButton(tr("↑"));
     btnMoveUp->setToolTip(tr("Move selected listener up"));
-    btnMoveDown = new QPushButton("↓");
+    btnMoveDown = new QPushButton(tr("↓"));
     btnMoveDown->setToolTip(tr("Move selected listener down"));
 
     auto btnLayout = new QVBoxLayout();
@@ -542,7 +542,7 @@ void DialogAgent::loadProfiles()
 
         QString subtitle = profileListener;
         if (!timestamp.isEmpty())
-            subtitle = profileListener + " | " + timestamp;
+            subtitle = tr("%1 | %2").arg(profileListener, timestamp);
 
         cardWidget->addCard(profileName, subtitle);
     }
@@ -566,7 +566,7 @@ void DialogAgent::saveProfile(const QString &profileName, const QString &agentNa
     dataJson["listener"]      = listenerName;
     dataJson["agent"]         = agentName;
     dataJson["config"]        = configData;
-    dataJson["timestamp"]     = QDateTime::currentDateTime().toString("dd.MM hh:mm");
+    dataJson["timestamp"]     = QDateTime::currentDateTime().toString(tr("dd.MM hh:mm"));
     QString profileData = QJsonDocument(dataJson).toJson(QJsonDocument::Compact);
 
     Storage::AddAgentProfile(project, profileName, profileData);

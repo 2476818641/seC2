@@ -694,8 +694,8 @@ void AxListWidgetWrapper::showContextMenu(const QPoint &pos)
 {
     QMenu menu(list);
 
-    QAction* addAction = menu.addAction("Add");
-    QAction* removeAction = menu.addAction("Remove");
+    QAction* addAction = menu.addAction(tr("Add"));
+    QAction* removeAction = menu.addAction(tr("Remove"));
 
     QAction* selected = menu.exec(list->viewport()->mapToGlobal(pos));
     if (selected == addAction) {
