@@ -202,10 +202,10 @@ void DialogListener::AddExListeners(const QList<RegListenerConfig> &listeners, c
 
         configStackWidget->addWidget(ax_ui->widget);
         listenerCombobox->addItem(listener.name);
-        QString type = listener.type + " (" + listener.protocol + ")";
+        QString type = tr("%1 (%2)").arg(listener.type, listener.protocol);
         listenersSet.insert(type);
     }
-    listenerTypeCombobox->addItem("any");
+    listenerTypeCombobox->addItem(tr("any"));
     listenerTypeCombobox->addItems(QList<QString>(listenersSet.begin(), listenersSet.end()));
 }
 
@@ -249,8 +249,8 @@ void DialogListener::changeType(const QString &type)
 {
     listenerCombobox->clear();
     for (auto listener : listeners) {
-        QString listenerType = listener.type + " (" + listener.protocol + ")";
-        if (listenerType == type || type == "any")
+        QString listenerType = tr("%1 (%2)").arg(listener.type, listener.protocol);
+        if (listenerType == type || type == tr("any"))
             listenerCombobox->addItem(listener.name);
     }
 }
@@ -302,7 +302,7 @@ void DialogListener::saveProfile(const QString &profileName, const QString &conf
     dataJson["name"] = configName;
     dataJson["type"] = configType;
     dataJson["config"] = configData;
-    dataJson["timestamp"] = QDateTime::currentDateTime().toString("dd.MM hh:mm");
+    dataJson["timestamp"] = QDateTime::currentDateTime().toString(tr("dd.MM hh:mm"));
     QString profileData = QJsonDocument(dataJson).toJson(QJsonDocument::Compact);
 
     Storage::AddListenerProfile(authProfile.GetProject(), profileName, profileData);
@@ -443,7 +443,7 @@ void DialogListener::loadProfiles()
 
         QString subtitle = profileType;
         if (!timestamp.isEmpty())
-            subtitle = profileType + " | " + timestamp;
+            subtitle = tr("%1 | %2").arg(profileType, timestamp);
 
         cardWidget->addCard(profileName, subtitle);
     }

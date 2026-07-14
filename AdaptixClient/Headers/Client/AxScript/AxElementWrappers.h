@@ -3,6 +3,7 @@
 
 #include <UI/Widgets/AbstractDock.h>
 
+#include <QCoreApplication>
 #include <QVariant>
 #include <QJSValue>
 #include <QBoxLayout>
@@ -29,68 +30,68 @@ class AxScriptEngine;
 class AdaptixWidget;
 
 inline const QMap<QString, QString> FIELD_MAP_CREDS = {
-    {"username", "Username"},
-    {"password", "Password"},
-    {"realm",    "Realm"},
-    {"type",     "Type"},
-    {"tag",      "Tag"},
-    {"date",     "Date"},
-    {"storage",  "Storage"},
-    {"agent_id", "Agent"},
-    {"host",     "Host"}
+    {"username", QCoreApplication::translate("AxElementWrappers", "Username")},
+    {"password", QCoreApplication::translate("AxElementWrappers", "Password")},
+    {"realm",    QCoreApplication::translate("AxElementWrappers", "Realm")},
+    {"type",     QCoreApplication::translate("AxElementWrappers", "Type")},
+    {"tag",      QCoreApplication::translate("AxElementWrappers", "Tag")},
+    {"date",     QCoreApplication::translate("AxElementWrappers", "Date")},
+    {"storage",  QCoreApplication::translate("AxElementWrappers", "Storage")},
+    {"agent_id", QCoreApplication::translate("AxElementWrappers", "Agent")},
+    {"host",     QCoreApplication::translate("AxElementWrappers", "Host")}
 };
 
 inline const QMap<QString, QString> FIELD_MAP_AGENTS = {
-    {"id",          "Agent ID"},
-    {"type",        "Type"},
-    {"listener",    "Listener"},
-    {"external_ip", "External"},
-    {"internal_ip", "Internal"},
-    {"domain",      "Domain"},
-    {"computer",    "Computer"},
-    {"username",    "Username"},
-    {"process",     "Process"},
-    {"pid",         "PID"},
-    {"tid",         "TID"},
-    {"os",          "OS"},
-    {"tags",        "Tags"},
+    {"id",          QCoreApplication::translate("AxElementWrappers", "Agent ID")},
+    {"type",        QCoreApplication::translate("AxElementWrappers", "Type")},
+    {"listener",    QCoreApplication::translate("AxElementWrappers", "Listener")},
+    {"external_ip", QCoreApplication::translate("AxElementWrappers", "External")},
+    {"internal_ip", QCoreApplication::translate("AxElementWrappers", "Internal")},
+    {"domain",      QCoreApplication::translate("AxElementWrappers", "Domain")},
+    {"computer",    QCoreApplication::translate("AxElementWrappers", "Computer")},
+    {"username",    QCoreApplication::translate("AxElementWrappers", "Username")},
+    {"process",     QCoreApplication::translate("AxElementWrappers", "Process")},
+    {"pid",         QCoreApplication::translate("AxElementWrappers", "PID")},
+    {"tid",         QCoreApplication::translate("AxElementWrappers", "TID")},
+    {"os",          QCoreApplication::translate("AxElementWrappers", "OS")},
+    {"tags",        QCoreApplication::translate("AxElementWrappers", "Tags")},
 };
 
 inline const QMap<QString, QString> FIELD_MAP_LISTENERS = {
-    {"name",       "Name"},
-    {"type",       "Type"},
-    {"protocol",   "Protocol"},
-    {"bind_host",  "Bind Host"},
-    {"bind_port",  "Bind Port"},
-    {"agent_addr", "Agent Addresses"},
-    {"status",     "Status"},
-    {"date",       "Date"},
+    {"name",       QCoreApplication::translate("AxElementWrappers", "Name")},
+    {"type",       QCoreApplication::translate("AxElementWrappers", "Type")},
+    {"protocol",   QCoreApplication::translate("AxElementWrappers", "Protocol")},
+    {"bind_host",  QCoreApplication::translate("AxElementWrappers", "Bind Host")},
+    {"bind_port",  QCoreApplication::translate("AxElementWrappers", "Bind Port")},
+    {"agent_addr", QCoreApplication::translate("AxElementWrappers", "Agent Addresses")},
+    {"status",     QCoreApplication::translate("AxElementWrappers", "Status")},
+    {"date",       QCoreApplication::translate("AxElementWrappers", "Date")},
 };
 
 inline const QMap<QString, QString> FIELD_MAP_TARGETS = {
-    {"id",       "Target ID"},
-    {"computer", "Computer"},
-    {"domain",   "Domain"},
-    {"address",  "Address"},
-    {"tag",      "Tag"},
-    {"os",       "OS"},
-    {"os_desc",  "OS Description"},
-    {"info",     "Info"},
-    {"date",     "Date"},
-    {"alive",    "Alive"},
+    {"id",       QCoreApplication::translate("AxElementWrappers", "Target ID")},
+    {"computer", QCoreApplication::translate("AxElementWrappers", "Computer")},
+    {"domain",   QCoreApplication::translate("AxElementWrappers", "Domain")},
+    {"address",  QCoreApplication::translate("AxElementWrappers", "Address")},
+    {"tag",      QCoreApplication::translate("AxElementWrappers", "Tag")},
+    {"os",       QCoreApplication::translate("AxElementWrappers", "OS")},
+    {"os_desc",  QCoreApplication::translate("AxElementWrappers", "OS Description")},
+    {"info",     QCoreApplication::translate("AxElementWrappers", "Info")},
+    {"date",     QCoreApplication::translate("AxElementWrappers", "Date")},
+    {"alive",    QCoreApplication::translate("AxElementWrappers", "Alive")},
 };
 
 inline const QMap<QString, QString> FIELD_MAP_DOWNLOADS = {
-    {"id",         "File ID"},
-    {"agent_id",   "Agent ID"},
-    {"agent_name", "Agent"},
-    {"user",       "User"},
-    {"computer",   "Computer"},
-    {"filename",   "Filename"},
-    {"total_size", "Total Size"},
-    {"recv_size",  "Received"},
-    {"state",      "State"},
-    {"date",       "Date"},
+    {"id",         QCoreApplication::translate("AxElementWrappers", "File ID")},
+    {"agent_id",   QCoreApplication::translate("AxElementWrappers", "Agent ID")},
+    {"agent_name", QCoreApplication::translate("AxElementWrappers", "Agent")},
+    {"user",       QCoreApplication::translate("AxElementWrappers", "User")},
+    {"computer",   QCoreApplication::translate("AxElementWrappers", "Computer")},
+    {"filename",   QCoreApplication::translate("AxElementWrappers", "Filename")},
+    {"total_size", QCoreApplication::translate("AxElementWrappers", "Total Size")},
+    {"recv_size",  QCoreApplication::translate("AxElementWrappers", "Received")},
+    {"state",      QCoreApplication::translate("AxElementWrappers", "State")},
+    {"date",       QCoreApplication::translate("AxElementWrappers", "Date")},
 };
 
 /// ABSTRACT
@@ -1027,16 +1028,16 @@ public:
 
             QString username = agent.Username;
             if (agent.Elevated)
-                username = "* " + username;
+                username = QCoreApplication::translate("AxElementWrappers", "* ") + username;
             if (!agent.Impersonated.isEmpty())
-                username += " [" + agent.Impersonated + "]";
+                username += QCoreApplication::translate("AxElementWrappers", " [") + agent.Impersonated + QCoreApplication::translate("AxElementWrappers", "]");
 
-            QString process = QString("%1 (%2)").arg(agent.Process).arg(agent.Arch);
+            QString process = QCoreApplication::translate("AxElementWrappers", "%1 (%2)").arg(agent.Process).arg(agent.Arch);
 
-            QString os = "unknown";
-            if (agent.Os == OS_WINDOWS)    os = "windows";
-            else if (agent.Os == OS_LINUX) os = "linux";
-            else if (agent.Os == OS_MAC)   os = "macos";
+            QString os = QCoreApplication::translate("AxElementWrappers", "unknown");
+            if (agent.Os == OS_WINDOWS)    os = QCoreApplication::translate("AxElementWrappers", "windows");
+            else if (agent.Os == OS_LINUX) os = QCoreApplication::translate("AxElementWrappers", "linux");
+            else if (agent.Os == OS_MAC)   os = QCoreApplication::translate("AxElementWrappers", "macos");
 
             if (key == "id")          return agent.Id;
             if (key == "type")        return agent.Name;
@@ -1315,10 +1316,10 @@ public:
             const auto& target = m_data[index.row()];
             const QString& key = m_fieldKeys[index.column()];
 
-            QString os = "unknown";
-            if (target.Os == OS_WINDOWS)    os = "windows";
-            else if (target.Os == OS_LINUX) os = "linux";
-            else if (target.Os == OS_MAC)   os = "macos";
+            QString os = QCoreApplication::translate("AxElementWrappers", "unknown");
+            if (target.Os == OS_WINDOWS)    os = QCoreApplication::translate("AxElementWrappers", "windows");
+            else if (target.Os == OS_LINUX) os = QCoreApplication::translate("AxElementWrappers", "linux");
+            else if (target.Os == OS_MAC)   os = QCoreApplication::translate("AxElementWrappers", "macos");
 
             if (key == "id")       return target.TargetId;
             if (key == "computer") return target.Computer;
@@ -1329,7 +1330,7 @@ public:
             if (key == "os_desc")  return target.OsDesc;
             if (key == "info")     return target.Info;
             if (key == "date")     return target.Date;
-            if (key == "alive")    return target.Alive ? "Yes" : "No";
+            if (key == "alive")    return target.Alive ? QCoreApplication::translate("AxElementWrappers", "Yes") : QCoreApplication::translate("AxElementWrappers", "No");
         }
         return QVariant();
     }
@@ -1460,10 +1461,10 @@ public:
 
             QString state;
             switch (download.State) {
-                case DOWNLOAD_STATE_RUNNING:  state = "running";  break;
-                case DOWNLOAD_STATE_STOPPED:  state = "stopped";  break;
-                case DOWNLOAD_STATE_FINISHED: state = "finished"; break;
-                default:                      state = "canceled"; break;
+                case DOWNLOAD_STATE_RUNNING:  state = QCoreApplication::translate("AxElementWrappers", "running");  break;
+                case DOWNLOAD_STATE_STOPPED:  state = QCoreApplication::translate("AxElementWrappers", "stopped");  break;
+                case DOWNLOAD_STATE_FINISHED: state = QCoreApplication::translate("AxElementWrappers", "finished"); break;
+                default:                      state = QCoreApplication::translate("AxElementWrappers", "canceled"); break;
             }
 
             if (key == "id")         return download.FileId;

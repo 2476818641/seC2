@@ -4,12 +4,12 @@ CXX_X64 := x86_64-w64-mingw32-g++
 CXX_X86 := i686-w64-mingw32-g++
 ASM_SYNTAX := -masm=intel
 
-BEACON_DIR := "beacon"
-FILES_DIR := "files"
-HTTP_DIST_DIR := "objects_http"
-SMB_DIST_DIR := "objects_smb"
-TCP_DIST_DIR := "objects_tcp"
-DNS_DIST_DIR := "objects_dns"
+BEACON_DIR := beacon
+FILES_DIR := files
+HTTP_DIST_DIR := objects_http
+SMB_DIST_DIR := objects_smb
+TCP_DIST_DIR := objects_tcp
+DNS_DIST_DIR := objects_dns
 
 HTTP_OBJECTS_X64 := $(patsubst beacon/%.cpp, $(HTTP_DIST_DIR)/%.x64.o, $(SOURCES))
 HTTP_OBJECTS_X86 := $(patsubst beacon/%.cpp, $(HTTP_DIST_DIR)/%.x86.o, $(SOURCES))

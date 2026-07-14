@@ -332,8 +332,6 @@ void QlementineStyle::triggerCompleteRepaint() {
     polish(topWidget);
     
     for (auto* widget : allWidgets) {
-      widget->style()->unpolish(widget);
-      widget->style()->polish(widget);
       widget->update();
     }
     topWidget->update();
