@@ -20,6 +20,33 @@ import (
 	"github.com/Adaptix-Framework/axc2"
 )
 
+const configTemplate = `#if defined(BUILD_SVC)
+char* getServiceName()
+{
+	return (char*) SERVICE_NAME;
+}
+#endif
+
+char* getProfile()
+{
+	return (char*) PROFILE;
+}
+
+unsigned int getProfileSize()
+{
+	return PROFILE_SIZE;
+}
+
+int isIatHidingEnabled()
+{
+#if defined(IAT_HIDING)
+	return 1;
+#else
+	return 0;
+#endif
+}
+`
+
 type Teamserver interface {
 	TsListenerInteralHandler(watermark string, data []byte) (string, error)
 
@@ -615,9 +642,17 @@ func (p *PluginAgent) BuildPayload(profile adaptix.BuildProfile, agentProfiles [
 
 	agentProfileSize := len(agentProfile) / 4
 
-	configPath := filepath.Join(currentDir, ObjectDir, "config.cpp")
+	configDir := filepath.Join(currentDir, ObjectDir)
+	if _, err := os.Stat(configDir); os.IsNotExist(err) {
+		if err := os.MkdirAll(configDir, 0755); err != nil {
+			return nil, "", fmt.Errorf("failed to create directory %s: %v", configDir, err)
+		}
+	}
+	configPath := filepath.Join(configDir, "config.cpp")
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
-		return nil, "", fmt.Errorf("config template not found at %s", configPath)
+		if err := os.WriteFile(configPath, []byte(configTemplate), 0644); err != nil {
+			return nil, "", fmt.Errorf("failed to write config template to %s: %v", configPath, err)
+		}
 	}
 
 	if generateConfig.Format == "Service Exe" {
