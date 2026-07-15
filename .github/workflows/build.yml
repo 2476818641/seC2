@@ -160,6 +160,13 @@ jobs:
             (cd "$dir" && GOEXPERIMENT="$GOEXPERIMENT" CGO_ENABLED=1 go build -buildmode=plugin -ldflags="-s -w" -o "dist/$sofile" ./*.go)
           done
 
+      - name: Compile beacon agent C++ objects (x64 + x86)
+        run: |
+          make -C AdaptixServer/extenders/beacon_agent/src_beacon
+          for d in objects_http objects_smb objects_tcp objects_dns; do
+            mv AdaptixServer/extenders/beacon_agent/src_beacon/$d AdaptixServer/extenders/beacon_agent/dist/$d
+          done
+
       - name: Build server
         working-directory: AdaptixServer
         run: |
@@ -178,6 +185,7 @@ jobs:
             cp "$dir/config.yaml" "dist-server/extenders/$name/" 2>/dev/null || true
             cp "$dir/ax_config.axs" "dist-server/extenders/$name/" 2>/dev/null || true
             cp "$dir/dist/"*.so "dist-server/extenders/$name/" 2>/dev/null || true
+            cp -r "$dir/dist/objects_"* "dist-server/extenders/$name/" 2>/dev/null || true
           done
           cd dist-server
           tar czf ../AdaptixServer-Linux.tar.gz .
