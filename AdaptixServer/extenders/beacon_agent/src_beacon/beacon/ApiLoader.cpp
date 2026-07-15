@@ -52,13 +52,8 @@ void* __cdecl memcpy(void* Dst, const void* Src, size_t Size)
 	return Dst;
 }
 
-static BYTE DecryptByte(BYTE c)
-{
-	return c ^ 0x55;
-}
-
-CHAR HdChrA(CHAR c) { return (CHAR)DecryptByte((BYTE)c); }
-WCHAR HdChrW(WCHAR c) { return (WCHAR)DecryptByte((BYTE)c); }
+CHAR HdChrA(CHAR c) { return (CHAR)((BYTE)c ^ 0x55); }
+WCHAR HdChrW(WCHAR c) { return c; }
 
 SYSMODULES* SysModules = NULL;
 WINAPIFUNC* ApiWin     = NULL;
@@ -147,19 +142,19 @@ BOOL ApiLoad()
 
 		// iphlpapi
 		CHAR iphlpapi_c[13];
-		iphlpapi_c[0]  = HdChrA(0x1C);  // 'I' ^ 0x55
-		iphlpapi_c[1]  = HdChrA(0x25);  // 'p' ^ 0x55
-		iphlpapi_c[2]  = HdChrA(0x3D);  // 'h' ^ 0x55
-		iphlpapi_c[3]  = HdChrA(0x39);  // 'l' ^ 0x55
-		iphlpapi_c[4]  = HdChrA(0x25);  // 'p' ^ 0x55
-		iphlpapi_c[5]  = HdChrA(0x34);  // 'a' ^ 0x55
-		iphlpapi_c[6]  = HdChrA(0x25);  // 'p' ^ 0x55
-		iphlpapi_c[7]  = HdChrA(0x3C);  // 'i' ^ 0x55
-		iphlpapi_c[8]  = HdChrA(0x7B);  // '.' ^ 0x55
-		iphlpapi_c[9]  = HdChrA(0x31);  // 'd' ^ 0x55
-		iphlpapi_c[10] = HdChrA(0x39);  // 'l' ^ 0x55
-		iphlpapi_c[11] = HdChrA(0x39);  // 'l' ^ 0x55
-		iphlpapi_c[12] = HdChrA(0x55);  // '\0' ^ 0x55
+		iphlpapi_c[0]  = HdChrA('I');
+		iphlpapi_c[1]  = HdChrA('p');
+		iphlpapi_c[2]  = HdChrA('h');
+		iphlpapi_c[3]  = HdChrA('l');
+		iphlpapi_c[4]  = HdChrA('p');
+		iphlpapi_c[5]  = HdChrA('a');
+		iphlpapi_c[6]  = HdChrA('p');
+		iphlpapi_c[7]  = HdChrA('i');
+		iphlpapi_c[8]  = HdChrA('.');
+		iphlpapi_c[9]  = HdChrA('d');
+		iphlpapi_c[10] = HdChrA('l');
+		iphlpapi_c[11] = HdChrA('l');
+		iphlpapi_c[12] = HdChrA(0);
 	
 		HMODULE hIphlpapiModule = ApiWin->LoadLibraryA(iphlpapi_c);
 		SysModules->Iphlpapi = hIphlpapiModule;
@@ -169,19 +164,19 @@ BOOL ApiLoad()
 
 		// advapi32
 		CHAR advapi32_c[13];
-		advapi32_c[0]  = HdChrA(0x14);  // 'A' ^ 0x55
-		advapi32_c[1]  = HdChrA(0x31);  // 'd' ^ 0x55
-		advapi32_c[2]  = HdChrA(0x23);  // 'v' ^ 0x55
-		advapi32_c[3]  = HdChrA(0x34);  // 'a' ^ 0x55
-		advapi32_c[4]  = HdChrA(0x25);  // 'p' ^ 0x55
-		advapi32_c[5]  = HdChrA(0x3C);  // 'i' ^ 0x55
-		advapi32_c[6]  = HdChrA(0x66);  // '3' ^ 0x55
-		advapi32_c[7]  = HdChrA(0x67);  // '2' ^ 0x55
-		advapi32_c[8]  = HdChrA(0x7B);  // '.' ^ 0x55
-		advapi32_c[9]  = HdChrA(0x31);  // 'd' ^ 0x55
-		advapi32_c[10] = HdChrA(0x39);  // 'l' ^ 0x55
-		advapi32_c[11] = HdChrA(0x39);  // 'l' ^ 0x55
-		advapi32_c[12] = HdChrA(0x55);  // '\0' ^ 0x55
+		advapi32_c[0]  = HdChrA('A');
+		advapi32_c[1]  = HdChrA('d');
+		advapi32_c[2]  = HdChrA('v');
+		advapi32_c[3]  = HdChrA('a');
+		advapi32_c[4]  = HdChrA('p');
+		advapi32_c[5]  = HdChrA('i');
+		advapi32_c[6]  = HdChrA('3');
+		advapi32_c[7]  = HdChrA('2');
+		advapi32_c[8]  = HdChrA('.');
+		advapi32_c[9]  = HdChrA('d');
+		advapi32_c[10] = HdChrA('l');
+		advapi32_c[11] = HdChrA('l');
+		advapi32_c[12] = HdChrA(0);
 
 		HMODULE hAdvapi32Module = ApiWin->LoadLibraryA(advapi32_c);
 		SysModules->Advapi32 = hAdvapi32Module;
@@ -199,17 +194,17 @@ BOOL ApiLoad()
 
 		// msvcrt
 		CHAR msvcrt_c[11];
-		msvcrt_c[0]  = HdChrA(0x38);  // 'm' ^ 0x55
-		msvcrt_c[1]  = HdChrA(0x26);  // 's' ^ 0x55
-		msvcrt_c[2]  = HdChrA(0x23);  // 'v' ^ 0x55
-		msvcrt_c[3]  = HdChrA(0x36);  // 'c' ^ 0x55
-		msvcrt_c[4]  = HdChrA(0x27);  // 'r' ^ 0x55
-		msvcrt_c[5]  = HdChrA(0x21);  // 't' ^ 0x55
-		msvcrt_c[6]  = HdChrA(0x7B);  // '.' ^ 0x55
-		msvcrt_c[7]  = HdChrA(0x31);  // 'd' ^ 0x55
-		msvcrt_c[8]  = HdChrA(0x39);  // 'l' ^ 0x55
-		msvcrt_c[9]  = HdChrA(0x39);  // 'l' ^ 0x55
-		msvcrt_c[10] = HdChrA(0x55);  // '\0' ^ 0x55
+		msvcrt_c[0]  = HdChrA('m');
+		msvcrt_c[1]  = HdChrA('s');
+		msvcrt_c[2]  = HdChrA('v');
+		msvcrt_c[3]  = HdChrA('c');
+		msvcrt_c[4]  = HdChrA('r');
+		msvcrt_c[5]  = HdChrA('t');
+		msvcrt_c[6]  = HdChrA('.');
+		msvcrt_c[7]  = HdChrA('d');
+		msvcrt_c[8]  = HdChrA('l');
+		msvcrt_c[9]  = HdChrA('l');
+		msvcrt_c[10] = HdChrA(0);
 
 		HMODULE hMsvcrtModule = ApiWin->LoadLibraryA(msvcrt_c);
 		SysModules->Msvcrt = hMsvcrtModule;
@@ -223,17 +218,17 @@ BOOL ApiLoad()
 
 		// Ws2_32
 		CHAR ws2_32_c[11];
-		ws2_32_c[0]  = HdChrA(0x02);  // 'W' ^ 0x55
-		ws2_32_c[1]  = HdChrA(0x26);  // 's' ^ 0x55
-		ws2_32_c[2]  = HdChrA(0x67);  // '2' ^ 0x55
-		ws2_32_c[3]  = HdChrA(0x0A);  // '_' ^ 0x55
-		ws2_32_c[4]  = HdChrA(0x66);  // '3' ^ 0x55
-		ws2_32_c[5]  = HdChrA(0x67);  // '2' ^ 0x55
-		ws2_32_c[6]  = HdChrA(0x7B);  // '.' ^ 0x55
-		ws2_32_c[7]  = HdChrA(0x31);  // 'd' ^ 0x55
-		ws2_32_c[8]  = HdChrA(0x39);  // 'l' ^ 0x55
-		ws2_32_c[9]  = HdChrA(0x39);  // 'l' ^ 0x55
-		ws2_32_c[10] = HdChrA(0x55);  // '\0' ^ 0x55
+		ws2_32_c[0]  = HdChrA('W');
+		ws2_32_c[1]  = HdChrA('s');
+		ws2_32_c[2]  = HdChrA('2');
+		ws2_32_c[3]  = HdChrA('_');
+		ws2_32_c[4]  = HdChrA('3');
+		ws2_32_c[5]  = HdChrA('2');
+		ws2_32_c[6]  = HdChrA('.');
+		ws2_32_c[7]  = HdChrA('d');
+		ws2_32_c[8]  = HdChrA('l');
+		ws2_32_c[9]  = HdChrA('l');
+		ws2_32_c[10] = HdChrA(0);
 
 		HMODULE hWs2_32Module = ApiWin->LoadLibraryA(ws2_32_c);
 		SysModules->Ws2_32 = hWs2_32Module;

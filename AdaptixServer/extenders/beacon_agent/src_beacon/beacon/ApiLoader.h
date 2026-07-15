@@ -93,6 +93,7 @@ struct WINAPIFUNC
 	DECL_API(Sleep);
 	DECL_API(VirtualAlloc);
 	DECL_API(VirtualFree);
+	DECL_API(VirtualProtect);
 	DECL_API(WaitForSingleObject);
 	DECL_API(WaitNamedPipeA);
 	DECL_API(WideCharToMultiByte);

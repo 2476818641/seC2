@@ -16,6 +16,10 @@
 
 SYSCALL_TABLE* g_Syscalls = NULL;
 
+#define MAX_SYSCALL_COUNT 32
+static PBYTE g_SyscallStubBlock = NULL;
+static int   g_SyscallStubIndex = 0;
+
 DWORD GetSyscallNumber(HMODULE hNtdll, PVOID pFunc)
 {
 	PBYTE pBytes = (PBYTE)pFunc;
@@ -52,15 +56,13 @@ static BOOL ResolveSyscallEntry(SYSCALL_ENTRY* entry, HMODULE hNtdll, ULONG hash
 	if (ssn == 0)
 		return FALSE;
 
-	BYTE* stub = (BYTE*)ApiWin->VirtualAlloc(NULL, SYSCALL_STUB_SIZE,
-		MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
-	if (!stub)
+	if (!g_SyscallStubBlock || g_SyscallStubIndex >= MAX_SYSCALL_COUNT)
 		return FALSE;
 
-	BuildSyscallStub(stub, ssn);
+	BYTE* stub = g_SyscallStubBlock + (g_SyscallStubIndex * SYSCALL_STUB_SIZE);
+	g_SyscallStubIndex++;
 
-	DWORD oldProt;
-	ApiWin->VirtualProtect(stub, SYSCALL_STUB_SIZE, PAGE_EXECUTE_READ, &oldProt);
+	BuildSyscallStub(stub, ssn);
 
 	entry->pSyscallStub = stub;
 	entry->dwSSN        = ssn;
@@ -78,24 +80,33 @@ BOOL InitSyscalls()
 	if (!hNtdll)
 		return FALSE;
 
-	ResolveSyscallEntry(&g_Syscalls->NtAllocateVirtualMemory,  hNtdll, SYSCALL_HASH_NTALLOCATEVIRTUALMEMORY);
-	ResolveSyscallEntry(&g_Syscalls->NtWriteVirtualMemory,      hNtdll, SYSCALL_HASH_NTWRITEVIRTUALMEMORY);
-	ResolveSyscallEntry(&g_Syscalls->NtProtectVirtualMemory,    hNtdll, SYSCALL_HASH_NTPROTECTVIRTUALMEMORY);
-	ResolveSyscallEntry(&g_Syscalls->NtCreateThreadEx,          hNtdll, SYSCALL_HASH_NTCREATETHREADEX);
-	ResolveSyscallEntry(&g_Syscalls->NtOpenProcess,             hNtdll, HASH_FUNC_NTOPENPROCESS);
-	ResolveSyscallEntry(&g_Syscalls->NtOpenProcessToken,        hNtdll, HASH_FUNC_NTOPENPROCESSTOKEN);
-	ResolveSyscallEntry(&g_Syscalls->NtClose,                   hNtdll, HASH_FUNC_NTCLOSE);
-	ResolveSyscallEntry(&g_Syscalls->NtQuerySystemInformation,  hNtdll, HASH_FUNC_NTQUERYSYSTEMINFORMATION);
-	ResolveSyscallEntry(&g_Syscalls->NtQueryInformationProcess, hNtdll, HASH_FUNC_NTQUERYINFORMATIONPROCESS);
-	ResolveSyscallEntry(&g_Syscalls->NtTerminateProcess,        hNtdll, HASH_FUNC_NTTERMINATEPROCESS);
-	ResolveSyscallEntry(&g_Syscalls->NtTerminateThread,         hNtdll, HASH_FUNC_NTTERMINATETHREAD);
-	ResolveSyscallEntry(&g_Syscalls->NtFreeVirtualMemory,       hNtdll, HASH_FUNC_NTFREEVIRTUALMEMORY);
-	ResolveSyscallEntry(&g_Syscalls->NtCreateSection,           hNtdll, SYSCALL_HASH_NTCREATESECTION);
-	ResolveSyscallEntry(&g_Syscalls->NtMapViewOfSection,        hNtdll, SYSCALL_HASH_NTMAPVIEWOFSECTION);
-	ResolveSyscallEntry(&g_Syscalls->NtUnmapViewOfSection,      hNtdll, SYSCALL_HASH_NTUNMAPVIEWOFSECTION);
-	ResolveSyscallEntry(&g_Syscalls->NtWaitForSingleObject,     hNtdll, SYSCALL_HASH_NTWAITFORSINGLEOBJECT);
-	ResolveSyscallEntry(&g_Syscalls->NtDelayExecution,          hNtdll, SYSCALL_HASH_NTDELAYEXECUTION);
-	ResolveSyscallEntry(&g_Syscalls->NtQueryVirtualMemory,      hNtdll, SYSCALL_HASH_NTQUERYVIRTUALMEMORY);
+	SIZE_T blockSize = MAX_SYSCALL_COUNT * SYSCALL_STUB_SIZE;
+	g_SyscallStubBlock = (PBYTE)ApiWin->VirtualAlloc(NULL, blockSize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+	if (!g_SyscallStubBlock)
+		return FALSE;
+	g_SyscallStubIndex = 0;
+
+	ResolveSyscallEntry(&g_Syscalls->ntAllocateVirtualMemory,  hNtdll, SYSCALL_HASH_NTALLOCATEVIRTUALMEMORY);
+	ResolveSyscallEntry(&g_Syscalls->ntWriteVirtualMemory,      hNtdll, SYSCALL_HASH_NTWRITEVIRTUALMEMORY);
+	ResolveSyscallEntry(&g_Syscalls->ntProtectVirtualMemory,    hNtdll, SYSCALL_HASH_NTPROTECTVIRTUALMEMORY);
+	ResolveSyscallEntry(&g_Syscalls->ntCreateThreadEx,          hNtdll, SYSCALL_HASH_NTCREATETHREADEX);
+	ResolveSyscallEntry(&g_Syscalls->ntOpenProcess,             hNtdll, HASH_FUNC_NTOPENPROCESS);
+	ResolveSyscallEntry(&g_Syscalls->ntOpenProcessToken,        hNtdll, HASH_FUNC_NTOPENPROCESSTOKEN);
+	ResolveSyscallEntry(&g_Syscalls->ntClose,                   hNtdll, HASH_FUNC_NTCLOSE);
+	ResolveSyscallEntry(&g_Syscalls->ntQuerySystemInformation,  hNtdll, HASH_FUNC_NTQUERYSYSTEMINFORMATION);
+	ResolveSyscallEntry(&g_Syscalls->ntQueryInformationProcess, hNtdll, HASH_FUNC_NTQUERYINFORMATIONPROCESS);
+	ResolveSyscallEntry(&g_Syscalls->ntTerminateProcess,        hNtdll, HASH_FUNC_NTTERMINATEPROCESS);
+	ResolveSyscallEntry(&g_Syscalls->ntTerminateThread,         hNtdll, HASH_FUNC_NTTERMINATETHREAD);
+	ResolveSyscallEntry(&g_Syscalls->ntFreeVirtualMemory,       hNtdll, HASH_FUNC_NTFREEVIRTUALMEMORY);
+	ResolveSyscallEntry(&g_Syscalls->ntCreateSection,           hNtdll, SYSCALL_HASH_NTCREATESECTION);
+	ResolveSyscallEntry(&g_Syscalls->ntMapViewOfSection,        hNtdll, SYSCALL_HASH_NTMAPVIEWOFSECTION);
+	ResolveSyscallEntry(&g_Syscalls->ntUnmapViewOfSection,      hNtdll, SYSCALL_HASH_NTUNMAPVIEWOFSECTION);
+	ResolveSyscallEntry(&g_Syscalls->ntWaitForSingleObject,     hNtdll, SYSCALL_HASH_NTWAITFORSINGLEOBJECT);
+	ResolveSyscallEntry(&g_Syscalls->ntDelayExecution,          hNtdll, SYSCALL_HASH_NTDELAYEXECUTION);
+	ResolveSyscallEntry(&g_Syscalls->ntQueryVirtualMemory,      hNtdll, SYSCALL_HASH_NTQUERYVIRTUALMEMORY);
+
+	DWORD oldProt;
+	ApiWin->VirtualProtect(g_SyscallStubBlock, blockSize, PAGE_EXECUTE_READ, &oldProt);
 
 	return TRUE;
 }

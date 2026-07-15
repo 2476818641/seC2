@@ -123,9 +123,9 @@ DWORD WINAPI AsyncBofThreadProc(LPVOID lpParameter)
         return 1;
     }
     
-    SIZE_T szFns = MAP_FUNCTIONS_SIZE;
+    SIZE_T szMf = MAP_FUNCTIONS_SIZE;
     ctx->mapFunctions = NULL;
-    NtAllocateVirtualMemory_SYSCALL(NtCurrentProcess(), (PVOID*)&ctx->mapFunctions, 0, &szFns, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+    NtAllocateVirtualMemory_SYSCALL(NtCurrentProcess(), (PVOID*)&ctx->mapFunctions, 0, &szMf, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
     if (ctx->mapFunctions) {
         PVOID pBase = ctx->mapFunctions;
         SIZE_T sz = MAP_FUNCTIONS_SIZE;
@@ -141,8 +141,8 @@ DWORD WINAPI AsyncBofThreadProc(LPVOID lpParameter)
     
     result = ProcessRelocations(ctx->coffFile, pHeader, ctx->mapSections, pSymbolTable, ctx->mapFunctions);
     if (!result) {
-        SIZE_T szFree = 0;
-        NtFreeVirtualMemory_SYSCALL(NtCurrentProcess(), (PVOID*)&ctx->mapFunctions, &szFree, MEM_RELEASE);
+        SIZE_T sz = 0;
+        NtFreeVirtualMemory_SYSCALL(NtCurrentProcess(), (PVOID*)&ctx->mapFunctions, &sz, MEM_RELEASE);
         ctx->mapFunctions = NULL;
         CleanupSections(ctx->mapSections, MAX_SECTIONS);
         ctx->state = ASYNC_BOF_STATE_FINISHED;
@@ -163,9 +163,8 @@ DWORD WINAPI AsyncBofThreadProc(LPVOID lpParameter)
     }
     
     if (ctx->mapFunctions) {
-        PVOID pFn = ctx->mapFunctions;
-        SIZE_T szFree = 0;
-        NtFreeVirtualMemory_SYSCALL(NtCurrentProcess(), &pFn, &szFree, MEM_RELEASE);
+        SIZE_T sz = 0;
+        NtFreeVirtualMemory_SYSCALL(NtCurrentProcess(), (PVOID*)&ctx->mapFunctions, &sz, MEM_RELEASE);
         ctx->mapFunctions = NULL;
     }
     CleanupSections(ctx->mapSections, MAX_SECTIONS);
@@ -323,9 +322,8 @@ void Boffer::CleanupBofContext(AsyncBofContext* ctx)
     }
     
     if (ctx->mapFunctions) {
-        PVOID pFn = ctx->mapFunctions;
-        SIZE_T szFree = 0;
-        NtFreeVirtualMemory_SYSCALL(NtCurrentProcess(), &pFn, &szFree, MEM_RELEASE);
+        SIZE_T sz = 0;
+        NtFreeVirtualMemory_SYSCALL(NtCurrentProcess(), (PVOID*)&ctx->mapFunctions, &sz, MEM_RELEASE);
         ctx->mapFunctions = NULL;
     }
     CleanupSections(ctx->mapSections, MAX_SECTIONS);

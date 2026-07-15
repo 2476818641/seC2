@@ -74,15 +74,10 @@ type Profile struct {
 	BannerSize  int      `msgpack:"banner_size"`
 	ConnTimeout int      `msgpack:"conn_timeout"`
 	ConnCount   int      `msgpack:"conn_count"`
-	UseSSL       bool              `msgpack:"use_ssl"`
-	SslCert      []byte            `msgpack:"ssl_cert"`
-	SslKey       []byte            `msgpack:"ssl_key"`
-	CaCert       []byte            `msgpack:"ca_cert"`
-	UseHTTP      bool              `msgpack:"use_http"`
-	HttpUri      string            `msgpack:"http_uri"`
-	HttpMethod   string            `msgpack:"http_method"`
-	HttpUserAgent string           `msgpack:"http_user_agent"`
-	HttpHeaders  map[string]string `msgpack:"http_headers"`
+	UseSSL      bool     `msgpack:"use_ssl"`
+	SslCert     []byte   `msgpack:"ssl_cert"`
+	SslKey      []byte   `msgpack:"ssl_key"`
+	CaCert      []byte   `msgpack:"ca_cert"`
 }
 
 type SessionInfo struct {

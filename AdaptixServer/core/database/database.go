@@ -86,7 +86,9 @@ func (dbms *DBMS) DatabaseInit() error {
     	"Watermark" TEXT NOT NULL,
     	"CustomData" BLOB
     );`
-	_, err = dbms.database.Exec(createTableQuery)
+	if _, err = dbms.database.Exec(createTableQuery); err != nil {
+		return err
+	}
 
 	// TODO CLEAR: Soft migration for old databases
 	_, _ = dbms.database.Exec(`ALTER TABLE "Listeners" ADD COLUMN "ListenerStatus" TEXT;`)
@@ -98,7 +100,9 @@ func (dbms *DBMS) DatabaseInit() error {
     	"Message" TEXT NOT NULL,
     	"Date" BIGINT
     );`
-	_, err = dbms.database.Exec(createTableQuery)
+	if _, err = dbms.database.Exec(createTableQuery); err != nil {
+		return err
+	}
 
 	createTableQuery = `CREATE TABLE IF NOT EXISTS "Downloads" (
     	"FileId" TEXT NOT NULL UNIQUE, 
@@ -113,7 +117,9 @@ func (dbms *DBMS) DatabaseInit() error {
     	"Date" BIGINT,
     	"State" INTEGER
     );`
-	_, err = dbms.database.Exec(createTableQuery)
+	if _, err = dbms.database.Exec(createTableQuery); err != nil {
+		return err
+	}
 
 	createTableQuery = `CREATE TABLE IF NOT EXISTS "Screenshots" (
     	"ScreenId" TEXT NOT NULL UNIQUE, 
@@ -123,7 +129,9 @@ func (dbms *DBMS) DatabaseInit() error {
     	"Note" TEXT,
     	"Date" BIGINT
     );`
-	_, err = dbms.database.Exec(createTableQuery)
+	if _, err = dbms.database.Exec(createTableQuery); err != nil {
+		return err
+	}
 
 	createTableQuery = `CREATE TABLE IF NOT EXISTS "Agents" (
     	"Id" TEXT NOT NULL UNIQUE, 
@@ -160,7 +168,9 @@ func (dbms *DBMS) DatabaseInit() error {
     	"TargetId" TEXT,
     	"CustomData" BLOB
     );`
-	_, err = dbms.database.Exec(createTableQuery)
+	if _, err = dbms.database.Exec(createTableQuery); err != nil {
+		return err
+	}
 
 	createTableQuery = `CREATE TABLE IF NOT EXISTS "Tasks" (
     	"TaskId" TEXT NOT NULL UNIQUE, 
@@ -177,14 +187,18 @@ func (dbms *DBMS) DatabaseInit() error {
     	"ClearText" TEXT,
     	"Completed" INTEGER
     );`
-	_, err = dbms.database.Exec(createTableQuery)
+	if _, err = dbms.database.Exec(createTableQuery); err != nil {
+		return err
+	}
 
 	createTableQuery = `CREATE TABLE IF NOT EXISTS "Consoles" (
 		"Id" INTEGER PRIMARY KEY AUTOINCREMENT,
     	"AgentId" TEXT NOT NULL,
     	"Packet" BLOB
     );`
-	_, err = dbms.database.Exec(createTableQuery)
+	if _, err = dbms.database.Exec(createTableQuery); err != nil {
+		return err
+	}
 
 	createTableQuery = `CREATE TABLE IF NOT EXISTS "Pivots" (
 		"Id" INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -193,7 +207,9 @@ func (dbms *DBMS) DatabaseInit() error {
     	"ParentAgentId" TEXT NOT NULL,
     	"ChildAgentId" TEXT NOT NULL
     );`
-	_, err = dbms.database.Exec(createTableQuery)
+	if _, err = dbms.database.Exec(createTableQuery); err != nil {
+		return err
+	}
 
 	createTableQuery = `CREATE TABLE IF NOT EXISTS "Credentials" (
 		"Id" INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -208,7 +224,9 @@ func (dbms *DBMS) DatabaseInit() error {
 		"AgentId" TEXT,
 		"Host" TEXT
     );`
-	_, err = dbms.database.Exec(createTableQuery)
+	if _, err = dbms.database.Exec(createTableQuery); err != nil {
+		return err
+	}
 
 	createTableQuery = `CREATE TABLE IF NOT EXISTS "Targets" (
 		"Id" INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -224,7 +242,9 @@ func (dbms *DBMS) DatabaseInit() error {
 		"Alive" BOOLEAN,
 		"Agents" TEXT
     );`
-	_, err = dbms.database.Exec(createTableQuery)
+	if _, err = dbms.database.Exec(createTableQuery); err != nil {
+		return err
+	}
 
 	createTableQuery = `CREATE TABLE IF NOT EXISTS "ExtenderData" (
 		"Id" INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -233,7 +253,9 @@ func (dbms *DBMS) DatabaseInit() error {
     	"Value" BLOB,
 		UNIQUE("ExtenderName", "Key")
     );`
-	_, err = dbms.database.Exec(createTableQuery)
+	if _, err = dbms.database.Exec(createTableQuery); err != nil {
+		return err
+	}
 
 	indexQueries := []string{
 		`CREATE INDEX IF NOT EXISTS idx_tasks_agentid ON Tasks(AgentId);`,

