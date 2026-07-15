@@ -322,6 +322,7 @@ Packer* ObjectExecute(ULONG taskId, char* targetFuncName, unsigned char* coffFil
 	LPVOID* mapFunctions       = NULL;
 	BOOL  result			 = FALSE;
 	PCHAR mapSections[MAX_SECTIONS] = { 0 };
+	SIZE_T szMf = 0;
 
 	InitBofOutputData();
 	bofTaskId = taskId;
@@ -345,7 +346,7 @@ Packer* ObjectExecute(ULONG taskId, char* targetFuncName, unsigned char* coffFil
 		goto RET;
 	}
 
-	SIZE_T szMf = MAP_FUNCTIONS_SIZE;
+	szMf = MAP_FUNCTIONS_SIZE;
 	mapFunctions = NULL;
 	NtAllocateVirtualMemory_SYSCALL(NtCurrentProcess(), (PVOID*)&mapFunctions, 0, &szMf, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
 	if (mapFunctions) {
