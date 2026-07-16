@@ -315,7 +315,7 @@ func (t *TransportDNS) handleHB(req *dnsRequest) (needsReset bool, hasPendingTas
 	}
 	t.mu.Unlock()
 
-	decrypted := aesGCMDecrypt(req.data, t.Config.EncryptKey)
+	decrypted := req.data
 
 	var ackOffset, ackTaskNonce uint32
 	if len(decrypted) >= 4 {
@@ -358,7 +358,7 @@ func (t *TransportDNS) handleGET(req *dnsRequest, w dns.ResponseWriter) []byte {
 		_ = Ts.TsAgentSetTick(req.sid, t.Name)
 	}
 
-	decrypted := aesGCMDecrypt(req.data, t.Config.EncryptKey)
+	decrypted := req.data
 
 	var reqOffset uint32
 	if len(decrypted) >= 4 {
@@ -410,7 +410,7 @@ func (t *TransportDNS) handlePUT(req *dnsRequest) putAckInfo {
 	}
 	t.mu.Unlock()
 
-	decrypted := aesGCMDecrypt(req.data, t.Config.EncryptKey)
+	decrypted := req.data
 	ack = t.handlePutFragment(req.sid, req.seq, decrypted, ack)
 
 	if req.sid != "" {
@@ -722,8 +722,7 @@ func (t *TransportDNS) buildDataResponse(req *dnsRequest, frame []byte, ttl uint
 		}
 	}
 
-	encrypted := aesGCMEncrypt(frame, t.Config.EncryptKey)
-	b64Str := base64.StdEncoding.EncodeToString(encrypted)
+	b64Str := base64.StdEncoding.EncodeToString(frame)
 
 	var chunks []string
 	for len(b64Str) > 255 {
@@ -970,58 +969,6 @@ func newUpDone(total uint32) *dnsUpDone {
 }
 
 // Utility Functions
-func aesGCMDecrypt(data []byte, keyHex string) []byte {
-	if len(data) == 0 {
-		return data
-	}
-	keyBytes, err := hex.DecodeString(keyHex)
-	if err != nil || len(keyBytes) != 16 {
-		return data
-	}
-	block, err := aes.NewCipher(keyBytes)
-	if err != nil {
-		return data
-	}
-	aesgcm, err := cipher.NewGCM(block)
-	if err != nil {
-		return data
-	}
-	nonceSize := aesgcm.NonceSize()
-	if len(data) < nonceSize {
-		return data
-	}
-	nonce, cipherdata := data[:nonceSize], data[nonceSize:]
-	result, err := aesgcm.Open(nil, nonce, cipherdata, nil)
-	if err != nil {
-		return data
-	}
-	return result
-}
-
-func aesGCMEncrypt(data []byte, keyHex string) []byte {
-	if len(data) == 0 {
-		return data
-	}
-	keyBytes, err := hex.DecodeString(keyHex)
-	if err != nil || len(keyBytes) != 16 {
-		return data
-	}
-	block, err := aes.NewCipher(keyBytes)
-	if err != nil {
-		return data
-	}
-	aesgcm, err := cipher.NewGCM(block)
-	if err != nil {
-		return data
-	}
-	nonce := make([]byte, aesgcm.NonceSize())
-	if _, err := rand.Reader.Read(nonce); err != nil {
-		return data
-	}
-	ciphertext := aesgcm.Seal(nonce, nonce, data, nil)
-	return ciphertext
-}
-
 func parseMetaV1(data []byte) (metaV1, []byte, bool) {
 	var m metaV1
 	if len(data) < metaV1Size {

