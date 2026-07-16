@@ -998,7 +998,7 @@ void ConnectorDNS::Exchange(BYTE* plainData, ULONG plainSize, BYTE* sessionKey)
         int plainLen = this->recvSize - GCM_NONCE_SIZE - GCM_TAG_SIZE;
         BYTE* plainBuf = (BYTE*)MemAllocLocal(plainLen);
         if (plainBuf) {
-            if (AESGCMDecrypt(this->recvData, plainLen, sessionKey,
+            if (AESGCMDecrypt(this->recvData + GCM_NONCE_SIZE, plainLen, sessionKey,
                               this->recvData, plainBuf,
                               this->recvData + this->recvSize - GCM_TAG_SIZE)) {
                 MemFreeLocal((LPVOID*)&this->recvData, (ULONG)this->recvSize);

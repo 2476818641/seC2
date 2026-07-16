@@ -150,8 +150,6 @@ BYTE* Agent::BuildBeat(ULONG* size)
 
 	MemFreeLocal((LPVOID*)&encryptedBeat, totalSize);
 
-	delete packer;
-
 	*size = beat_size;
 	return beat;
 }

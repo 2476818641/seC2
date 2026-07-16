@@ -30,7 +30,7 @@ AgentConfig::AgentConfig()
 
 	ULONG plainSize = profileSize - GCM_NONCE_SIZE - GCM_TAG_SIZE;
 	unsigned char* decrypted = (unsigned char*)MemAllocLocal(plainSize);
-	if (AESGCMDecrypt(packer->data()+4, plainSize, this->encrypt_key,
+	if (AESGCMDecrypt(packer->data()+4 + GCM_NONCE_SIZE, plainSize, this->encrypt_key,
 	                  packer->data()+4, // nonce
 	                  decrypted,
 	                  packer->data()+4 + profileSize - GCM_TAG_SIZE)) { // tag

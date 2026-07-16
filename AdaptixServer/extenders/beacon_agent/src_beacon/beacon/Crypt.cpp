@@ -101,8 +101,6 @@ static void aes_encrypt_block(const unsigned char* in, unsigned char* out, const
     }
 
     const unsigned char* rkp = rk + 160;
-    for (i = 0; i < 16; i++)
-        out[i] = sbox[s[i]] ^ rkp[i];
     // Final round: no MixColumns, just ShiftRows + SubBytes + AddRoundKey
     out[0]  = sbox[s[0]];  out[1]  = sbox[s[5]];  out[2]  = sbox[s[10]]; out[3]  = sbox[s[15]];
     out[4]  = sbox[s[4]];  out[5]  = sbox[s[9]];  out[6]  = sbox[s[14]]; out[7]  = sbox[s[3]];
